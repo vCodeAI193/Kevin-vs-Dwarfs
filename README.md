@@ -5,6 +5,7 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 **Wirbelsturm**, der alle umliegenden Zwerge für einige Sekunden umwirft.
 
 ➡️ **Spielkonzept & Designvision:** siehe [`VISION.md`](./VISION.md)
+➡️ **Lessons Learned (Entwicklungs-Logbuch / Blog-Material):** siehe [`LESSONS_LEARNED.md`](./LESSONS_LEARNED.md)
 
 > **Status:** Frühe Konzeptphase. Aktuell existieren Vision und Roadmap — der Spielcode
 > wird entlang der Meilensteine unten umgesetzt.
