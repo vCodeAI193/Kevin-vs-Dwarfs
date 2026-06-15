@@ -22,6 +22,7 @@ Prioritäten in der Roadmap: 🔴 hoch · 🟡 mittel · 🟢 nice-to-have.
 - [x] **Prozedurale Schwebe-Plattformen** (einseitig, deterministisch je Segment)
 - [x] **Parallax-Hintergrund** (Wolken, Hügel, Sonne) + Partikel-Effekte
 - [x] **Menü- / Game-Over-Screens** mit Neustart
+- [x] **Unit-Tests** der reinen Spiellogik (`engine.js`, via `node:test`, 0 Dependencies)
 
 ---
 

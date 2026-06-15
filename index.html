@@ -184,6 +184,7 @@
   <!-- Drehen -->
   <div id="rotate">📱 ↻<br><span style="font-size:16px;opacity:.85">Bitte das Gerät quer drehen</span></div>
 
+<script src="engine.js"></script>
 <script>
 "use strict";
 (function () {
@@ -191,6 +192,10 @@
   //  Kevin vs. Zwerge — 2D-Browser-Jump'n'Run (Vanilla JS / Canvas)
   //  Design-Auflösung 1280x720, per CSS auf die Bildschirmgröße skaliert.
   // ===================================================================
+
+  // Reine Spiellogik aus engine.js (dieselbe Quelle nutzen die Tests).
+  const { DIFFICULTY, rectsOverlap, clamp, isStomp, withinSpin, scoreForKill,
+          nextRamp, clampDt, spinStatus, computePlatforms } = window.KevinEngine;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -207,12 +212,7 @@
   const SPIN_COOLDOWN = 2.4;       // s Abklingzeit
   const SPIN_RADIUS = 130;         // px Wirkradius
 
-  // --- Schwierigkeitsgrade: mehr & schnellere Gegner ---
-  const DIFFICULTY = {
-    leicht: { spawn: 2.0, speed: 70,  max: 6,  ramp: 0.85 },
-    mittel: { spawn: 1.3, speed: 100, max: 10, ramp: 0.78 },
-    schwer: { spawn: 0.85, speed: 140, max: 16, ramp: 0.70 },
-  };
+  // (Schwierigkeitsgrade DIFFICULTY und die reine Logik stehen in engine.js.)
 
   // --- DOM ---
   const el = {
@@ -282,30 +282,7 @@
   let highscore = +(localStorage.getItem("kevin_highscore") || 0);
   el.hsMenu.textContent = highscore;
 
-  // ----------------------------------------------------------------
-  //  Hilfsfunktionen
-  // ----------------------------------------------------------------
-  function seededRand(n) { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
-  function rectsOverlap(a, b) {
-    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-  }
-  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-
-  // Deterministische Schwebe-Plattformen pro 620px-Segment (für Abwechslung).
-  function platformsInView() {
-    const list = [];
-    const startSeg = Math.floor((cameraX - 200) / 620);
-    const endSeg = Math.ceil((cameraX + W + 200) / 620);
-    for (let s = startSeg; s <= endSeg; s++) {
-      if (s < 1) continue;                       // Startbereich frei lassen
-      if (seededRand(s) > 0.55) continue;        // nicht in jedem Segment
-      const px = s * 620 + seededRand(s + 0.3) * 260;
-      const pw = 130 + seededRand(s + 0.7) * 120;
-      const py = GROUND_Y - (110 + seededRand(s + 0.9) * 110);
-      list.push({ x: px, y: py, w: pw, h: 22 });
-    }
-    return list;
-  }
+  // (Reine Hilfsfunktionen & Plattform-Generierung stehen in engine.js.)
 
   // ----------------------------------------------------------------
   //  Spielstart / Reset
@@ -370,8 +347,7 @@
     rampTimer += dt;
     if (rampTimer >= 12) {
       rampTimer = 0;
-      curSpawn = Math.max(0.45, curSpawn * diff.ramp);
-      curSpeed = Math.min(260, curSpeed + 12);
+      ({ spawn: curSpawn, speed: curSpeed } = nextRamp(curSpawn, curSpeed, diff.ramp));
       level++;
     }
 
@@ -407,7 +383,7 @@
     if (p.y + p.h >= GROUND_Y) { p.y = GROUND_Y - p.h; p.vy = 0; p.onGround = true; }
 
     // Plattformen (einseitig, nur von oben landbar)
-    const plats = platformsInView();
+    const plats = computePlatforms(cameraX, W, GROUND_Y);
     for (const pl of plats) {
       if (p.vy >= 0 && p.prevBottom <= pl.y + 4 &&
           p.x + p.w > pl.x + 4 && p.x < pl.x + pl.w - 4 &&
@@ -444,18 +420,14 @@
       d.bob += dt * 8;
 
       // Wirbelangriff trifft?
-      if (spinTimer > 0) {
-        const dx = (d.x + d.w / 2) - pcx, dy = (d.y + d.h / 2) - pcy;
-        if (dx * dx + dy * dy < SPIN_RADIUS * SPIN_RADIUS) {
-          killDwarf(d, Math.sign(dx) || 1, true);
-          continue;
-        }
+      if (spinTimer > 0 && withinSpin(pcx, pcy, d, SPIN_RADIUS)) {
+        killDwarf(d, Math.sign((d.x + d.w / 2) - pcx) || 1, true);
+        continue;
       }
 
       // Kollision mit Kevin
       if (rectsOverlap(p, d)) {
-        const stomp = p.vy > 0 && p.prevBottom <= d.y + 16;
-        if (stomp) {
+        if (isStomp(p, d)) {
           killDwarf(d, p.face, false);
           p.vy = STOMP_BOUNCE; p.onGround = false;
         } else if (p.invuln <= 0) {
@@ -485,7 +457,7 @@
   function killDwarf(d, dir, bySpin) {
     if (d.dead) return;
     d.dead = true; d.deadT = 0; d.squash = bySpin ? 0 : 1;
-    score += bySpin ? 150 : 100;
+    score += scoreForKill(bySpin);
     if (bySpin) { d.vx = dir * 420; d.vy = -480 - Math.random() * 160; }
     else { d.vx = 0; d.vy = 0; }
     addParticles(d.x + d.w / 2, d.y + d.h / 2, bySpin ? "#9ec7ff" : "#ffd766", bySpin ? 16 : 10);
@@ -496,8 +468,7 @@
     el.hearts.textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
     el.score.textContent = score;
     el.lvl.textContent = level;
-    const ready = spinCd <= 0 && spinTimer <= 0;
-    const pct = ready ? 100 : Math.round((1 - spinCd / SPIN_COOLDOWN) * 100);
+    const { ready, pct } = spinStatus(spinCd, spinTimer, SPIN_COOLDOWN);
     el.spinbar.style.width = pct + "%";
     el.spinlbl.textContent = ready ? "Wirbel bereit 🌀" : "Wirbel lädt …";
   }
@@ -721,7 +692,7 @@
   function loop(now) {
     let dt = (now - last) / 1000;
     last = now;
-    if (dt > 1 / 30) dt = 1 / 30;     // große Sprünge (Tab-Wechsel) begrenzen
+    dt = clampDt(dt);                 // große Sprünge (Tab-Wechsel) begrenzen
     if (state === "playing") update(dt);
     if (state === "playing" || state === "gameover") render();
     requestAnimationFrame(loop);

@@ -8,11 +8,23 @@ nutzt den Wirbelangriff (Spin). Schwierigkeitsgrad steuert Gegnerzahl & Tempo.
 Mobil per Touch spielbar.
 
 ## Aufbau
-- **`index.html`** — das gesamte Spiel: HTML (Overlays/HUD/Touch), CSS und das
-  JavaScript (Canvas-Engine) in einer Datei. **Keine Build-Tools, keine Dependencies.**
-- `README.md` — Spieler- & Steuerungs-Doku.
+- **`index.html`** — Darstellung & Steuerung: HTML (Overlays/HUD/Touch), CSS und die
+  Canvas-/Render-/Input-Schicht (eine IIFE). **Keine Build-Tools, keine Dependencies.**
+- **`engine.js`** — reine, seiteneffektfreie Spiellogik (Kollision, Stomp/Wirbel,
+  Scoring, Schwierigkeits-Ramp, Plattform-Generierung). UMD-Wrapper: im Browser
+  `window.KevinEngine`, in Node `require`. **Single Source of Truth** — Spiel und Tests
+  nutzen dieselben Funktionen, keine Duplikate.
+- **`tests/engine.test.js`** — Unit-Tests via Node-Test-Runner (`node:test`, 0 Deps).
+- `package.json` — nur ein Test-Skript (`npm test` → `node --test`), keine Dependencies.
+- `README.md` — Spieler- & Steuerungs-Doku · `KONZEPT.md` — Spielkonzept · `FEATURES.md` — Roadmap.
 
-## Architektur (innerhalb der `<script>`-IIFE in `index.html`)
+## Architektur
+- **Reine Logik → `engine.js`** (testbar, ohne DOM/Canvas): `isStomp`, `withinSpin`,
+  `rectsOverlap`, `clamp`, `scoreForKill`, `nextRamp`, `clampDt`, `spinStatus`,
+  `computePlatforms`, `seededRand`, Konstante `DIFFICULTY`. Neue Spielregel-Logik hier
+  ergänzen **und** in `tests/engine.test.js` abdecken — nicht inline in `index.html`.
+- **`index.html`** holt diese per `const { … } = window.KevinEngine;` und kümmert sich
+  nur um Zustand, Rendering, Eingabe und DOM.
 - **Design-Auflösung** fix `1280×720` (`W`/`H`), per CSS skaliert. Spiel-Logik rechnet
   immer in Design-Koordinaten — nie in Bildschirm-Pixeln.
 - **Game-Loop:** `requestAnimationFrame` + delta-time, `dt` auf `1/30` gedeckelt.
@@ -35,7 +47,8 @@ Mobil per Touch spielbar.
   Canvas-Skalierung.
 
 ## Vor dem Commit prüfen
-- JS-Syntax: Script extrahieren und `node --check` laufen lassen.
+- **Tests:** `npm test` (bzw. `node --test`) — müssen grün sein.
+- JS-Syntax: `node --check engine.js`; für `index.html` Script extrahieren und prüfen.
 - Manuell im Browser testen: `python3 -m http.server` → Stomp, Wirbel, Treffer/Leben,
   Schwierigkeitswechsel, Touch (DevTools-Geräteemulation).
 

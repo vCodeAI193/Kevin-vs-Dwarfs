@@ -5,8 +5,9 @@ kleine **Zwerge** drauf oder fegt sie mit seinem **Wirbelangriff** beiseite. Je 
 der gewählte Schwierigkeitsgrad, desto mehr und schnellere Gegner — und mit der Zeit
 wird es zusätzlich immer schneller.
 
-Komplett in **einer Datei** (`index.html`), kein Build, keine Abhängigkeiten —
-funktioniert auf Desktop **und** mobil (Touch-Steuerung).
+**Kein Build, keine Abhängigkeiten** — funktioniert auf Desktop **und** mobil
+(Touch-Steuerung). Das Spiel besteht aus `index.html` (Darstellung & Steuerung) und
+`engine.js` (reine Spiellogik); zum Spielen einfach `index.html` öffnen.
 
 > 📖 Mehr: Spielkonzept & Aufbau → [`KONZEPT.md`](KONZEPT.md) ·
 > geplante Features & Roadmap → [`FEATURES.md`](FEATURES.md)
@@ -50,3 +51,14 @@ python3 -m http.server 8000
 - Touch-Buttons als HTML-Overlay (Pointer-Events, Multitouch-fähig), nur auf
   Touch-Geräten sichtbar (`@media (pointer: coarse)`).
 - Prozedurale Schwebe-Plattformen (deterministisch pro Segment), Parallax-Hintergrund.
+- Reine Spiellogik (Kollision, Stomp/Wirbel, Scoring, Schwierigkeits-Ramp) liegt in
+  `engine.js` — dieselbe Quelle nutzen das Spiel **und** die Tests.
+
+## Tests
+
+Die reine Spiellogik (`engine.js`) ist mit Nodes eingebautem Test-Runner abgedeckt —
+**ohne zusätzliche Abhängigkeiten**:
+
+```bash
+npm test        # oder:  node --test
+```

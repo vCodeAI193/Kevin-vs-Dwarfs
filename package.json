@@ -1,0 +1,10 @@
+{
+  "name": "kevin-vs-zwerge",
+  "version": "1.0.0",
+  "description": "Kevin vs. Zwerge — 2D-Browser-Jump'n'Run. Tests prüfen die reine Spiellogik in engine.js.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  }
+}
