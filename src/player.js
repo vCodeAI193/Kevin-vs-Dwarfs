@@ -47,8 +47,13 @@ class Player {
     }
   }
 
+  /** Erhöht die Power-Leiste um einen Betrag (gedeckelt bei powerMax). */
+  addPower(amount) {
+    this.power = Math.min(this.powerMax, this.power + amount);
+  }
+
   addKillPower() {
-    this.power = Math.min(this.powerMax, this.power + this.powerPerKill);
+    this.addPower(this.powerPerKill);
   }
 
   /** Löst den Wirbelsturm aus, wenn die Leiste voll ist. Gibt true bei Erfolg. */

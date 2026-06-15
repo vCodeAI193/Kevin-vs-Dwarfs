@@ -8,8 +8,20 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 ➡️ **Lessons Learned (Entwicklungs-Logbuch / Blog-Material):** siehe [`LESSONS_LEARNED.md`](./LESSONS_LEARNED.md)
 ➡️ **Blog (ausformulierte Artikel zur Entwicklung):** siehe [`blog/`](./blog/)
 
-> **Status:** Frühe Konzeptphase. Aktuell existieren Vision und Roadmap — der Spielcode
-> wird entlang der Meilensteine unten umgesetzt.
+> **Status:** Spielbarer Prototyp. Die Meilensteine M0–M4 sind umgesetzt und um
+> mehrere Features erweitert.
+
+## Features
+
+- 🏃 Endlos-Lauf nach rechts mit Springen, ansteigender Schwierigkeit
+- 🦶 Zwerge per **Stomp** besiegen; seitlicher Kontakt = Game Over
+- 🌀 **Wirbelsturm** als Spezialangriff (Power-Leiste füllt sich pro Kill/Münze)
+- 🧝 **Zwerg-Typen:** normal, schnell und gepanzert (nur per Wirbelsturm besiegbar)
+- 🪨 **Hindernisse** (Felsen) zum Drüberspringen
+- 🪙 **Münzen** sammeln für Punkte und etwas Extra-Power
+- 🏆 **Highscore** dauerhaft gespeichert (localStorage)
+- 🔊 **Sound** (synthetisch über Web Audio, ohne Dateien) & ✨ Partikel-Effekte
+- ⏸️ **Pause** (P/Esc) und Ton an/aus (M)
 
 ## Tech-Stack
 
@@ -34,12 +46,19 @@ Jeder Meilenstein ist ein eigenständig spielbarer Schritt:
 
 ```
 Kevin-vs-Dwarfs/
-├── index.html          # Einstiegspunkt, Canvas
+├── index.html          # Einstiegspunkt, Canvas, lädt die Skripte
 ├── src/
-│   ├── game.js         # Game-Loop, Zustände, Score
-│   ├── player.js       # Kevin: Bewegung, Sprung, Wirbelsturm
-│   └── enemies.js      # Zwerge: Spawn, Bewegung, Kollision
-├── assets/             # Grafiken & Sounds (später)
+│   ├── game.js         # Game-Loop, Zustände, Kollisionen, HUD
+│   ├── player.js       # Kevin: Bewegung, Sprung, Wirbelsturm, Power
+│   ├── enemies.js      # Zwerge: Typen, Spawn, Bewegung
+│   ├── collectibles.js # Münzen: Spawn, Einsammeln
+│   ├── obstacles.js    # Hindernisse (Felsen)
+│   ├── collision.js    # reine Kollisions-Logik (testbar)
+│   ├── particles.js    # Partikel-Effekte
+│   ├── audio.js        # synthetische Soundeffekte (Web Audio)
+│   └── storage.js      # Highscore-Persistenz (localStorage)
+├── tests/              # Unit-Tests (node --test)
+├── blog/               # ausformulierte Entwickler-Artikel
 ├── VISION.md
 ├── README.md
 └── LICENSE
@@ -67,16 +86,21 @@ npm test      # oder: node --test
 ```
 
 Getestet werden u. a. Sprung/Schwerkraft, das Füllen und Auslösen des Wirbelsturms,
-das Spawnen/Entfernen der Zwerge, der Betäubungs-Timer sowie die Stomp- und
-Überlapp-Erkennung (`src/collision.js`).
+die Zwerg-Typen, das Spawnen/Entfernen von Zwergen, Münzen und Hindernissen, der
+Betäubungs-Timer, das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
+Überlapp-Erkennung (`src/collision.js`). Aktuell **48 Tests**.
+
+Bei jedem Push laufen die Tests automatisch über
+[GitHub Actions](./.github/workflows/tests.yml).
 
 ## Steuerung
 
 | Taste | Aktion |
 |-------|--------|
-| `→` / `D` | laufen / beschleunigen |
-| `Leertaste` / `↑` / `W` | springen |
+| `Leertaste` / `↑` / `W` / Klick | springen |
 | `Shift` / `F` | **Wirbelsturm** (wenn Power-Leiste voll) |
+| `P` / `Esc` | Pause |
+| `M` | Ton an/aus |
 
 ## Lizenz
 

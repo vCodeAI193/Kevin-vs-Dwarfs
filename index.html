@@ -44,14 +44,19 @@
   <h1>⚔️ Kevin gegen die Zwerge</h1>
   <canvas id="game" width="800" height="400"></canvas>
   <p class="hint">
-    <b>→ / D</b> laufen &nbsp;·&nbsp; <b>Leertaste / ↑ / W</b> springen &nbsp;·&nbsp;
-    <b>Shift / F</b> Wirbelsturm
+    <b>Leertaste / ↑ / W</b> springen &nbsp;·&nbsp; <b>Shift / F</b> Wirbelsturm
+    &nbsp;·&nbsp; <b>P / Esc</b> Pause &nbsp;·&nbsp; <b>M</b> Ton an/aus
   </p>
 
   <!-- Reihenfolge wichtig: Klassen vor dem Game-Loop laden -->
   <script src="src/collision.js"></script>
+  <script src="src/storage.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/particles.js"></script>
   <script src="src/player.js"></script>
   <script src="src/enemies.js"></script>
+  <script src="src/collectibles.js"></script>
+  <script src="src/obstacles.js"></script>
   <script src="src/game.js"></script>
 </body>
 </html>

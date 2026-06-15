@@ -11,101 +11,137 @@
 
   const player = new Player(GROUND_Y);
   const enemies = new EnemyManager(W, GROUND_Y);
+  const coins = new CoinManager(W, GROUND_Y);
+  const obstacles = new ObstacleManager(W, GROUND_Y);
+  const particles = new ParticleSystem();
+  const sound = new SoundFX();
+  const storage = typeof localStorage !== "undefined" ? localStorage : null;
 
-  // Spielzustand: "ready" | "playing" | "gameover"
+  // Spielzustand: "ready" | "playing" | "paused" | "gameover"
   let state = "ready";
   let score = 0;
   let kills = 0;
+  let coinsCollected = 0;
   let distance = 0;
   let worldSpeed = 4;
   let elapsed = 0; // Sekunden seit Spielstart (für Schwierigkeit)
   let bgOffset = 0;
+  let highscore = loadHighscore(storage);
 
   // ---- Eingabe ----
-  const keys = {};
+  const jumpKeys = ["Space", "ArrowUp", "KeyW"];
+  const whirlKeys = ["ShiftLeft", "ShiftRight", "KeyF"];
+
   window.addEventListener("keydown", (e) => {
-    const jumpKeys = ["Space", "ArrowUp", "KeyW"];
-    const whirlKeys = ["ShiftLeft", "ShiftRight", "KeyF"];
+    sound.resume(); // AudioContext braucht eine Nutzer-Geste
 
     if (jumpKeys.includes(e.code) || whirlKeys.includes(e.code)) e.preventDefault();
 
-    if (state === "ready" && (jumpKeys.includes(e.code) || e.code === "Enter")) {
-      startGame();
+    if (e.code === "KeyM") {
+      sound.setEnabled(sound.muted);
       return;
     }
-    if (state === "gameover" && (e.code === "Enter" || jumpKeys.includes(e.code))) {
+    if (e.code === "KeyP" || e.code === "Escape") {
+      togglePause();
+      return;
+    }
+
+    if ((state === "ready" || state === "gameover") &&
+        (jumpKeys.includes(e.code) || e.code === "Enter")) {
       startGame();
       return;
     }
 
     if (state === "playing") {
-      if (jumpKeys.includes(e.code)) player.jump();
+      if (jumpKeys.includes(e.code)) doJump();
       if (whirlKeys.includes(e.code)) doWhirlwind();
     }
-    keys[e.code] = true;
-  });
-  window.addEventListener("keyup", (e) => {
-    keys[e.code] = false;
   });
 
-  // Touch / Klick: springt bzw. startet
   canvas.addEventListener("pointerdown", () => {
-    if (state === "playing") player.jump();
-    else startGame();
+    sound.resume();
+    if (state === "playing") doJump();
+    else if (state !== "paused") startGame();
   });
 
   function startGame() {
     state = "playing";
     score = 0;
     kills = 0;
+    coinsCollected = 0;
     distance = 0;
     worldSpeed = 4;
     elapsed = 0;
     player.reset();
     enemies.reset();
+    coins.reset();
+    obstacles.reset();
+    particles.reset();
+  }
+
+  function togglePause() {
+    if (state === "playing") state = "paused";
+    else if (state === "paused") state = "playing";
+  }
+
+  function doJump() {
+    const wasGround = player.onGround;
+    player.jump();
+    if (wasGround) sound.jump();
   }
 
   function doWhirlwind() {
     if (!player.triggerWhirlwind()) return;
-    // Alle Zwerge im Umkreis umwerfen
+    sound.whirlwind();
     const px = player.x + player.width / 2;
+    const py = player.y + player.height / 2;
+    particles.emit(px, py, 26, { color: "#9be7ff", speed: 320, life: 0.6, size: 5 });
+    // Alle Zwerge im Umkreis umwerfen
     for (const d of enemies.dwarves) {
-      const dx = d.x + d.width / 2 - px;
-      if (Math.abs(dx) <= player.whirlRadius) {
+      if (Math.abs(d.x + d.width / 2 - px) <= player.whirlRadius) {
         d.stun(player.whirlStunTime);
       }
     }
   }
 
   // ---- Kollisionen (Hilfsfunktionen siehe collision.js) ----
-  function handleCollisions() {
+  function defeatDwarf(d) {
+    d.alive = false;
+    kills++;
+    player.addKillPower();
+    particles.emit(d.x + d.width / 2, d.y + d.height / 2, 12, {
+      color: "#d8a", speed: 200, life: 0.45, size: 4,
+    });
+    sound.stomp();
+  }
+
+  function handleDwarfCollisions() {
     for (const d of enemies.dwarves) {
       if (!d.alive || !rectsOverlap(player, d)) continue;
-
       const stomping = isStomp(player, d);
 
       if (d.stunned) {
-        // Betäubte Zwerge sind ungefährlich – können aber "eingesammelt" werden
-        if (stomping || player.whirlActive) {
-          d.alive = false;
-          kills++;
-          player.addKillPower();
-        }
+        // Betäubte Zwerge sind ungefährlich – können eingesammelt werden
+        if (stomping || player.whirlActive) defeatDwarf(d);
         continue;
       }
 
       if (player.whirlActive) {
-        // Während des Wirbels wird alles Berührte umgeworfen
         d.stun(player.whirlStunTime);
         continue;
       }
 
       if (stomping) {
-        d.alive = false;
-        kills++;
-        player.addKillPower();
-        player.vy = -player.jumpForce * 0.6; // kleiner Abpraller
-        player.onGround = false;
+        if (d.armored) {
+          // Gepanzert: Stomp prallt ab, kein Kill
+          player.vy = -player.jumpForce * 0.5;
+          player.onGround = false;
+          sound.stomp();
+        } else {
+          defeatDwarf(d);
+          player.vy = -player.jumpForce * 0.6; // kleiner Abpraller
+          player.onGround = false;
+        }
       } else {
         gameOver();
         return;
@@ -113,13 +149,42 @@
     }
   }
 
+  function handleObstacleCollisions() {
+    for (const o of obstacles.obstacles) {
+      if (rectsOverlap(player, o)) {
+        gameOver();
+        return;
+      }
+    }
+  }
+
+  function handleCoinCollisions() {
+    for (const c of coins.coins) {
+      if (!c.collected && rectsOverlap(player, c)) {
+        c.collected = true;
+        coinsCollected++;
+        player.addPower(COIN_POWER);
+        particles.emit(c.x + c.width / 2, c.y + c.height / 2, 8, {
+          color: "#ffd84d", speed: 150, life: 0.4, size: 3,
+        });
+        sound.coin();
+      }
+    }
+  }
+
   function gameOver() {
+    if (state !== "playing") return;
     state = "gameover";
+    sound.gameover();
+    highscore = saveHighscore(storage, score);
   }
 
   // ---- Update ----
   function update(dt) {
-    if (state !== "playing") return;
+    if (state !== "playing") {
+      particles.update(dt); // Effekte laufen auch im Game-Over-Bild aus
+      return;
+    }
 
     elapsed += dt;
     const difficulty = elapsed / 12; // wächst langsam an
@@ -130,18 +195,22 @@
 
     player.update(dt);
     enemies.update(dt, worldSpeed, difficulty);
-    handleCollisions();
+    coins.update(dt, worldSpeed);
+    obstacles.update(dt, worldSpeed, difficulty);
+    particles.update(dt);
 
-    score = Math.floor(distance) + kills * 50;
+    handleDwarfCollisions();
+    if (state === "playing") handleObstacleCollisions();
+    handleCoinCollisions();
+
+    score = Math.floor(distance) + kills * 50 + coinsCollected * COIN_VALUE;
   }
 
   // ---- Zeichnen ----
   function drawBackground() {
-    // Himmel
     ctx.fillStyle = "#87b7e8";
     ctx.fillRect(0, 0, W, H);
 
-    // Parallax-Hügel
     ctx.fillStyle = "#6fae6f";
     for (let i = -1; i < 4; i++) {
       const x = i * 280 - bgOffset * 0.5;
@@ -150,7 +219,6 @@
       ctx.fill();
     }
 
-    // Boden
     ctx.fillStyle = "#5a3a1a";
     ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
     ctx.fillStyle = "#3f7d3f";
@@ -159,11 +227,12 @@
 
   function drawHUD() {
     ctx.fillStyle = "#1b1033";
-    ctx.font = "bold 20px system-ui, sans-serif";
     ctx.textAlign = "left";
-    ctx.fillText("Score: " + score, 16, 30);
+    ctx.font = "bold 20px system-ui, sans-serif";
+    ctx.fillText("Score: " + score, 16, 28);
     ctx.font = "14px system-ui, sans-serif";
-    ctx.fillText("Zwerge: " + kills, 16, 50);
+    ctx.fillText("Best: " + highscore, 16, 48);
+    ctx.fillText("Zwerge: " + kills + "   Münzen: " + coinsCollected, 16, 66);
 
     // Power-Leiste
     const barW = 180;
@@ -178,7 +247,7 @@
     ctx.fillStyle = "#1b1033";
     ctx.font = "bold 12px system-ui, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(player.powerFull ? "WIRBELSTURM BEREIT!" : "Wirbelsturm", barX + barW / 2, barY + 30);
+    ctx.fillText(player.powerFull ? "WIRBELSTURM BEREIT! (F)" : "Wirbelsturm", barX + barW / 2, barY + 30);
   }
 
   function drawCenterText(title, subtitle) {
@@ -194,17 +263,23 @@
 
   function render() {
     drawBackground();
+    obstacles.draw(ctx);
+    coins.draw(ctx);
     enemies.draw(ctx);
     player.draw(ctx);
+    particles.draw(ctx);
 
-    if (state === "playing") {
-      drawHUD();
-    } else if (state === "ready") {
-      drawHUD();
+    drawHUD();
+    if (state === "ready") {
       drawCenterText("Kevin gegen die Zwerge", "Leertaste / Klick zum Starten");
+    } else if (state === "paused") {
+      drawCenterText("Pause", "P oder Esc zum Weiterspielen");
     } else if (state === "gameover") {
-      drawHUD();
-      drawCenterText("Game Over – Score: " + score, "Leertaste / Klick für neuen Versuch");
+      const sub =
+        score >= highscore && score > 0
+          ? "Neuer Rekord! Leertaste für neuen Versuch"
+          : "Leertaste / Klick für neuen Versuch";
+      drawCenterText("Game Over – Score: " + score, sub);
     }
   }
 

@@ -110,6 +110,55 @@ ist später oft wertvoller als das „Was".
 
 ---
 
+### 2026-06-15 — Ein Feature-Schub und warum Zufall Tests bricht
+
+**Situation:** Auf einen Schlag kamen viele Features dazu: Münzen + Highscore,
+Zwerg-Typen (normal/schnell/gepanzert), Hindernisse, Sound, Partikel und Pause.
+Jedes davon ist ein eigenes kleines Modul (`collectibles.js`, `obstacles.js`,
+`particles.js`, `audio.js`, `storage.js`).
+
+**Problem / Fehler:** Beim ersten Testlauf scheiterte genau ein Test —
+`pickDwarfType` lieferte bei „Schwierigkeit 0" ein `"fast"` statt des erwarteten
+`"normal"`. Ursache war nicht der Code, sondern der **Test**: Die Spawn-Funktion
+nutzt `Math.random`, und es gibt bewusst schon am Anfang eine kleine 5%-Chance auf
+schnelle Zwerge. Die Test-Annahme „am Anfang immer normal" war schlicht falsch.
+
+**Lösung:** Zwei Dinge, die sich bewährt haben:
+1. **Zufall injizierbar machen.** Alle Spawner und das Partikelsystem nehmen einen
+   `rng`-Parameter (Standard: `Math.random`). Im Spiel bleibt es zufällig, im Test
+   übergibt man `() => 0.0` und bekommt deterministisches Verhalten.
+2. **Externe Abhängigkeiten als Parameter.** Die Highscore-Funktionen bekommen das
+   `storage`-Objekt übergeben statt direkt auf `localStorage` zuzugreifen — so lässt
+   sich mit einem winzigen Mock testen, ganz ohne Browser.
+
+**Lektion:** Nicht-Determinismus (Zufall, Uhrzeit, Speicher, Netz) gehört an den
+Rand gedrängt und **per Parameter injiziert**. Dann ist Logik mit Zufall genauso
+einfach zu testen wie reine Mathematik. Und: Ein roter Test heißt nicht automatisch
+„Code kaputt" — manchmal ist die Annahme im Test das Problem.
+
+---
+
+### 2026-06-15 — Soundeffekte ohne eine einzige Audiodatei
+
+**Situation:** Das Spiel sollte Sound bekommen — aber Audiodateien hätten das
+„null Abhängigkeiten, eine `index.html`"-Prinzip aufgeweicht.
+
+**Problem / Fehler:** Audiodateien müssten beschafft, lizenziert, geladen und
+ausgeliefert werden. Außerdem laufen Tests unter Node, wo es keinen `AudioContext`
+gibt — ein direkter Zugriff würde dort sofort krachen.
+
+**Lösung:** Die Effekte werden **synthetisch** mit der Web Audio API erzeugt
+(Oszillatoren + kurze Hüllkurven). Kein einziges Asset. Der `SoundFX` prüft, ob ein
+`AudioContext` verfügbar ist, und ist andernfalls (z. B. unter Node) ein lautloser
+No-Op — so stören die Soundroutinen die Tests nicht.
+
+**Lektion:** Effekte müssen nicht immer aus Dateien kommen. Für ein kleines Spiel
+sind synthetische Sounds gratis, sofort da und halten das Projekt schlank. Und:
+Browser-only-APIs immer hinter eine Verfügbarkeitsprüfung legen, damit derselbe Code
+auch headless überlebt.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -118,3 +167,7 @@ ist später oft wertvoller als das „Was".
 - **So wenig Setup wie möglich.** Bei Prototypen schlägt „läuft sofort" oft
   „technisch perfekt".
 - **Das Warum dokumentieren.** Entscheidungen altern besser als ihr Code.
+- **Zufall injizieren.** Wer `rng` und Speicher als Parameter übergibt, kann auch
+  zufallsbehaftete Logik deterministisch testen.
+- **Browser-APIs absichern.** Hinter eine Verfügbarkeitsprüfung legen, dann läuft
+  derselbe Code im Browser und headless in den Tests.

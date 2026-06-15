@@ -1,9 +1,42 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { Dwarf, EnemyManager } = require("../src/enemies.js");
+const { Dwarf, EnemyManager, pickDwarfType } = require("../src/enemies.js");
 
 const GROUND_Y = 330;
 const CANVAS_W = 800;
+
+test("Dwarf-Typen: gepanzert ist armored, schnell läuft schneller", () => {
+  const normal = new Dwarf(0, GROUND_Y, "normal");
+  const fast = new Dwarf(0, GROUND_Y, "fast");
+  const armored = new Dwarf(0, GROUND_Y, "armored");
+  assert.equal(normal.armored, false);
+  assert.equal(armored.armored, true);
+  assert.ok(fast.speedFactor > normal.speedFactor);
+});
+
+test("unbekannter Typ fällt auf 'normal' zurück", () => {
+  const d = new Dwarf(0, GROUND_Y, "quatsch");
+  assert.equal(d.armored, false);
+  assert.equal(d.speedFactor, 1.0);
+});
+
+test("schneller Zwerg bewegt sich weiter als ein normaler", () => {
+  const normal = new Dwarf(500, GROUND_Y, "normal");
+  const fast = new Dwarf(500, GROUND_Y, "fast");
+  normal.update(1 / 60, 5);
+  fast.update(1 / 60, 5);
+  assert.ok(fast.x < normal.x);
+});
+
+test("pickDwarfType: bei difficulty 0 nie gepanzert", () => {
+  // Bei difficulty 0 ist die Panzer-Chance 0; hoher rng-Wert -> normal
+  assert.notEqual(pickDwarfType(0, () => 0.0), "armored");
+  assert.equal(pickDwarfType(0, () => 0.99), "normal");
+});
+
+test("pickDwarfType: hohe Schwierigkeit + kleiner rng -> gepanzert", () => {
+  assert.equal(pickDwarfType(10, () => 0.0), "armored");
+});
 
 test("Dwarf steht auf dem Boden und ist anfangs nicht betäubt", () => {
   const d = new Dwarf(500, GROUND_Y);
