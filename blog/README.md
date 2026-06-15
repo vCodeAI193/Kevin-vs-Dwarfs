@@ -12,6 +12,22 @@ verwendbar.
 - Jeder Artikel ist eigenständig lesbar (Einleitung, Problem, Lösung, Fazit) und
   hat einen kurzen Front-Matter-Block mit Titel, Datum und Tags.
 
+## Schnellstart (Automatik)
+
+Neues Artikel-Gerüst aus der Vorlage [`_TEMPLATE.md`](./_TEMPLATE.md) anlegen — das
+Skript füllt Datum/Titel und trägt den Artikel automatisch in die Tabelle unten ein:
+
+```bash
+scripts/new-article.sh "mein-slug" "Mein Titel"
+```
+
+Optionaler Git-Hook, der nach Commits an `src/` ans Artikelschreiben erinnert
+(einmalig pro Klon aktivieren):
+
+```bash
+scripts/setup-hooks.sh
+```
+
 ## Artikel
 
 | Datum | Titel |

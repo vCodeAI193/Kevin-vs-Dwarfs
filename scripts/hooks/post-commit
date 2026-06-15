@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# Erinnert nach einem Commit ans Schreiben eines Blog-Artikels – aber nur, wenn der
+# Commit Spielcode (src/) berührt hat. Blockiert nichts, gibt nur einen Hinweis aus.
+
+changed="$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)"
+
+# Wurde src/ geändert, aber kein neuer Blog-Artikel hinzugefügt?
+if echo "$changed" | grep -q '^src/'; then
+  if ! echo "$changed" | grep -Eq '^blog/[0-9]{4}-'; then
+    echo ""
+    echo "📝 Hinweis: Dieser Commit hat Spielcode (src/) geändert."
+    echo "   Vielleicht lohnt sich ein Blog-Artikel dazu:"
+    echo "     scripts/new-article.sh \"mein-slug\" \"Mein Titel\""
+    echo ""
+  fi
+fi
+
+exit 0
