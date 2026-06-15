@@ -54,6 +54,20 @@ python3 -m http.server 8000
 # danach im Browser: http://localhost:8000
 ```
 
+## Tests
+
+Die Spiel-Logik (Spieler, Zwerge, Kollisionen) ist in eigenen Modulen gekapselt und
+wird mit dem **eingebauten Test-Runner von Node** geprüft — **ohne zusätzliche
+Abhängigkeiten**:
+
+```bash
+npm test      # oder: node --test
+```
+
+Getestet werden u. a. Sprung/Schwerkraft, das Füllen und Auslösen des Wirbelsturms,
+das Spawnen/Entfernen der Zwerge, der Betäubungs-Timer sowie die Stomp- und
+Überlapp-Erkennung (`src/collision.js`).
+
 ## Steuerung
 
 | Taste | Aktion |

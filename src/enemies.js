@@ -93,3 +93,6 @@ if (typeof window !== "undefined") {
   window.Dwarf = Dwarf;
   window.EnemyManager = EnemyManager;
 }
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { Dwarf, EnemyManager };
+}

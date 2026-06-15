@@ -77,22 +77,12 @@
     }
   }
 
-  // ---- Kollisionen ----
-  function rectsOverlap(a, b) {
-    return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
-    );
-  }
-
+  // ---- Kollisionen (Hilfsfunktionen siehe collision.js) ----
   function handleCollisions() {
     for (const d of enemies.dwarves) {
       if (!d.alive || !rectsOverlap(player, d)) continue;
 
-      const playerBottom = player.y + player.height;
-      const stomping = player.vy > 0 && playerBottom - player.vy <= d.y + d.height * 0.5;
+      const stomping = isStomp(player, d);
 
       if (d.stunned) {
         // Betäubte Zwerge sind ungefährlich – können aber "eingesammelt" werden

@@ -112,3 +112,4 @@ class Player {
 }
 
 if (typeof window !== "undefined") window.Player = Player;
+if (typeof module !== "undefined" && module.exports) module.exports = { Player };
