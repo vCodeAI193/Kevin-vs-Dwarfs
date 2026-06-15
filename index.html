@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#1a2740" />
+<title>Kevin vs. Zwerge</title>
+<style>
+  :root {
+    --accent: #ffcf4d;
+    --accent-2: #ff8a3d;
+    --panel: rgba(16, 24, 43, 0.92);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    background: #0b1020;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #fff; user-select: none; touch-action: none;
+  }
+  #wrap {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 20%, #1c2a4a 0%, #0b1020 80%);
+  }
+  /* Canvas wird in Design-Auflösung (1280x720) gerendert und per CSS skaliert. */
+  #game {
+    background: #5fb6e6;
+    max-width: 100%; max-height: 100%;
+    width: auto; height: auto;
+    aspect-ratio: 16 / 9;
+    image-rendering: optimizeSpeed;
+    box-shadow: 0 0 60px rgba(0,0,0,0.6);
+  }
+
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; gap: 18px; padding: 24px;
+    background: rgba(8, 12, 24, 0.78); backdrop-filter: blur(4px);
+    z-index: 30;
+  }
+  .overlay.hidden { display: none; }
+  .title {
+    font-size: clamp(34px, 7vw, 72px); font-weight: 900; line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 4px 0 var(--accent-2), 0 8px 18px rgba(0,0,0,0.5);
+    letter-spacing: 1px;
+  }
+  .subtitle { font-size: clamp(14px, 2.6vw, 20px); opacity: .9; max-width: 620px; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  button.btn {
+    font: inherit; font-weight: 800; cursor: pointer;
+    border: none; border-radius: 14px; padding: 14px 26px;
+    font-size: clamp(16px, 2.4vw, 22px);
+    color: #20140a; background: linear-gradient(180deg, #ffd766, #ffb13d);
+    box-shadow: 0 5px 0 #b9741d, 0 8px 18px rgba(0,0,0,0.4);
+    transition: transform .05s ease, box-shadow .05s ease;
+  }
+  button.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b9741d; }
+  button.btn.secondary {
+    color: #fff; background: linear-gradient(180deg, #3b4f7a, #2a3a5e);
+    box-shadow: 0 5px 0 #16203a, 0 8px 18px rgba(0,0,0,0.4);
+  }
+  button.btn.secondary:active { box-shadow: 0 1px 0 #16203a; }
+  .help {
+    font-size: 14px; opacity: .82; max-width: 560px; line-height: 1.5;
+    background: var(--panel); padding: 14px 18px; border-radius: 12px;
+  }
+  .help b { color: var(--accent); }
+  .hs { font-size: clamp(15px,2.4vw,18px); opacity:.9; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: 14px 18px; pointer-events: none; z-index: 20;
+    font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+  #hud.hidden { display: none; }
+  #hearts { font-size: clamp(22px, 4vw, 30px); letter-spacing: 2px; }
+  #scorebox { text-align: right; font-size: clamp(15px, 2.6vw, 20px); }
+  #scorebox .lvl { color: var(--accent); }
+  #spinwrap {
+    margin-top: 6px; width: clamp(120px, 26vw, 190px); height: 12px;
+    background: rgba(0,0,0,0.45); border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  #spinbar { height: 100%; width: 100%; background: linear-gradient(90deg,#56e0ff,#7c5bff); transition: width .08s linear; }
+  #spinlbl { font-size: 11px; opacity: .85; margin-top: 2px; }
+
+  /* ---------- Touch controls (nur auf Touch-Geräten sichtbar) ---------- */
+  #touch { position: fixed; inset: 0; z-index: 25; pointer-events: none; display: none; }
+  #touch.show { display: block; }
+  .pad { position: absolute; bottom: 22px; display: flex; gap: 16px; pointer-events: none; }
+  .pad.left { left: 22px; }
+  .pad.right { right: 22px; }
+  .tbtn {
+    pointer-events: auto; width: clamp(64px, 15vw, 92px); height: clamp(64px, 15vw, 92px);
+    border-radius: 50%; border: 2px solid rgba(255,255,255,0.55);
+    background: rgba(20, 30, 55, 0.55); color: #fff;
+    font-size: clamp(24px, 6vw, 34px); font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(2px);
+  }
+  .tbtn:active, .tbtn.active { background: rgba(255, 180, 70, 0.7); color: #20140a; }
+  .tbtn.spin { background: rgba(90, 70, 200, 0.55); }
+  .tbtn.spin:active, .tbtn.spin.active { background: rgba(120, 120, 255, 0.85); }
+
+  /* Hochkant-Hinweis */
+  #rotate {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+    background: #0b1020; text-align: center; padding: 30px; font-size: 20px;
+  }
+  @media (orientation: portrait) and (max-width: 900px) {
+    #rotate { display: flex; }
+  }
+  @media (pointer: coarse) {
+    #touch.enabled { display: block; }
+  }
+</style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game" width="1280" height="720"></canvas>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div>
+      <div id="hearts">❤️❤️❤️</div>
+    </div>
+    <div id="scorebox">
+      <div>Punkte: <span id="score">0</span></div>
+      <div>Stufe: <span class="lvl" id="lvl">1</span></div>
+      <div id="spinwrap"><div id="spinbar"></div></div>
+      <div id="spinlbl">Wirbel bereit</div>
+    </div>
+  </div>
+
+  <!-- Touch-Steuerung -->
+  <div id="touch">
+    <div class="pad left">
+      <button class="tbtn" data-key="left" aria-label="Links">◀</button>
+      <button class="tbtn" data-key="right" aria-label="Rechts">▶</button>
+    </div>
+    <div class="pad right">
+      <button class="tbtn spin" data-key="spin" aria-label="Wirbelangriff">🌀</button>
+      <button class="tbtn" data-key="jump" aria-label="Springen">⤒</button>
+    </div>
+  </div>
+
+  <!-- Startmenü -->
+  <div id="menu" class="overlay">
+    <div class="title">KEVIN<br>vs. ZWERGE</div>
+    <div class="subtitle">Renne, springe auf die Zwerge — oder fege sie mit dem <b>Wirbelangriff</b> beiseite!</div>
+    <div class="hs">Highscore: <span id="hs-menu">0</span></div>
+    <div class="row">
+      <button class="btn" data-diff="leicht">Leicht</button>
+      <button class="btn" data-diff="mittel">Mittel</button>
+      <button class="btn" data-diff="schwer">Schwer</button>
+    </div>
+    <div class="help">
+      <b>Tastatur:</b> ← → / A D laufen · ↑ / W / Leertaste springen · X / Umschalt = Wirbelangriff<br>
+      <b>Touch:</b> Tasten unten am Rand · Springe auf Zwerge oder nutze 🌀<br>
+      Je höher die Stufe, desto mehr Zwerge — und es wird mit der Zeit schneller.
+    </div>
+  </div>
+
+  <!-- Game Over -->
+  <div id="gameover" class="overlay hidden">
+    <div class="title" style="font-size:clamp(30px,6vw,60px)">Game Over</div>
+    <div class="subtitle">Kevin wurde von den Zwergen überrannt!</div>
+    <div class="hs">Punkte: <b id="go-score">0</b> · Highscore: <b id="go-hs">0</b></div>
+    <div class="row">
+      <button class="btn" id="retry">Nochmal</button>
+      <button class="btn secondary" id="tomenu">Menü</button>
+    </div>
+  </div>
+
+  <!-- Drehen -->
+  <div id="rotate">📱 ↻<br><span style="font-size:16px;opacity:.85">Bitte das Gerät quer drehen</span></div>
+
+<script>
+"use strict";
+(function () {
+  // ===================================================================
+  //  Kevin vs. Zwerge — 2D-Browser-Jump'n'Run (Vanilla JS / Canvas)
+  //  Design-Auflösung 1280x720, per CSS auf die Bildschirmgröße skaliert.
+  // ===================================================================
+
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;          // 1280
+  const H = canvas.height;         // 720
+  const GROUND_Y = H - 96;         // Oberkante des Bodens
+
+  // --- Physik-Konstanten ---
+  const GRAVITY = 2200;            // px/s^2
+  const MOVE_SPEED = 330;          // px/s horizontal
+  const JUMP_V = -820;             // Absprunggeschwindigkeit
+  const STOMP_BOUNCE = -560;       // Rückprall nach Kopfsprung
+  const SPIN_DURATION = 0.45;      // s aktiv
+  const SPIN_COOLDOWN = 2.4;       // s Abklingzeit
+  const SPIN_RADIUS = 130;         // px Wirkradius
+
+  // --- Schwierigkeitsgrade: mehr & schnellere Gegner ---
+  const DIFFICULTY = {
+    leicht: { spawn: 2.0, speed: 70,  max: 6,  ramp: 0.85 },
+    mittel: { spawn: 1.3, speed: 100, max: 10, ramp: 0.78 },
+    schwer: { spawn: 0.85, speed: 140, max: 16, ramp: 0.70 },
+  };
+
+  // --- DOM ---
+  const el = {
+    menu: document.getElementById("menu"),
+    gameover: document.getElementById("gameover"),
+    hud: document.getElementById("hud"),
+    touch: document.getElementById("touch"),
+    hearts: document.getElementById("hearts"),
+    score: document.getElementById("score"),
+    lvl: document.getElementById("lvl"),
+    spinbar: document.getElementById("spinbar"),
+    spinlbl: document.getElementById("spinlbl"),
+    hsMenu: document.getElementById("hs-menu"),
+    goScore: document.getElementById("go-score"),
+    goHs: document.getElementById("go-hs"),
+  };
+
+  // --- Input ---
+  const input = { left: false, right: false, jump: false, spin: false, jumpEdge: false, spinEdge: false };
+
+  const KEYMAP = {
+    ArrowLeft: "left", KeyA: "left",
+    ArrowRight: "right", KeyD: "right",
+    ArrowUp: "jump", KeyW: "jump", Space: "jump",
+    KeyX: "spin", ShiftLeft: "spin", ShiftRight: "spin", KeyK: "spin",
+  };
+  addEventListener("keydown", (e) => {
+    const a = KEYMAP[e.code];
+    if (!a) return;
+    e.preventDefault();
+    if (!input[a]) { if (a === "jump") input.jumpEdge = true; if (a === "spin") input.spinEdge = true; }
+    input[a] = true;
+  }, { passive: false });
+  addEventListener("keyup", (e) => {
+    const a = KEYMAP[e.code];
+    if (!a) return;
+    e.preventDefault();
+    input[a] = false;
+  }, { passive: false });
+
+  // Touch-Buttons
+  document.querySelectorAll("#touch .tbtn").forEach((btn) => {
+    const key = btn.dataset.key;
+    const on = (e) => { e.preventDefault(); btn.classList.add("active");
+      if (!input[key]) { if (key === "jump") input.jumpEdge = true; if (key === "spin") input.spinEdge = true; }
+      input[key] = true; };
+    const off = (e) => { e.preventDefault(); btn.classList.remove("active"); input[key] = false; };
+    btn.addEventListener("pointerdown", on);
+    btn.addEventListener("pointerup", off);
+    btn.addEventListener("pointercancel", off);
+    btn.addEventListener("pointerleave", off);
+  });
+  // Touch-Overlay auf Touch-Geräten aktivieren
+  if (window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window) {
+    el.touch.classList.add("enabled", "show");
+  }
+
+  // --- Spielzustand ---
+  let state = "menu";            // menu | playing | gameover
+  let diff = DIFFICULTY.mittel;
+  let player, dwarves, particles, clouds;
+  let cameraX = 0;
+  let spawnTimer = 0, rampTimer = 0;
+  let score = 0, level = 1, lives = 3;
+  let spinTimer = 0, spinCd = 0;
+  let curSpawn = 1.3, curSpeed = 100;
+  let highscore = +(localStorage.getItem("kevin_highscore") || 0);
+  el.hsMenu.textContent = highscore;
+
+  // ----------------------------------------------------------------
+  //  Hilfsfunktionen
+  // ----------------------------------------------------------------
+  function seededRand(n) { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }
+  function rectsOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+  // Deterministische Schwebe-Plattformen pro 620px-Segment (für Abwechslung).
+  function platformsInView() {
+    const list = [];
+    const startSeg = Math.floor((cameraX - 200) / 620);
+    const endSeg = Math.ceil((cameraX + W + 200) / 620);
+    for (let s = startSeg; s <= endSeg; s++) {
+      if (s < 1) continue;                       // Startbereich frei lassen
+      if (seededRand(s) > 0.55) continue;        // nicht in jedem Segment
+      const px = s * 620 + seededRand(s + 0.3) * 260;
+      const pw = 130 + seededRand(s + 0.7) * 120;
+      const py = GROUND_Y - (110 + seededRand(s + 0.9) * 110);
+      list.push({ x: px, y: py, w: pw, h: 22 });
+    }
+    return list;
+  }
+
+  // ----------------------------------------------------------------
+  //  Spielstart / Reset
+  // ----------------------------------------------------------------
+  function startGame(difficulty) {
+    diff = DIFFICULTY[difficulty] || DIFFICULTY.mittel;
+    player = {
+      x: 120, y: GROUND_Y - 64, w: 44, h: 64,
+      vx: 0, vy: 0, onGround: false, face: 1,
+      prevBottom: 0, invuln: 0, runAnim: 0,
+    };
+    dwarves = [];
+    particles = [];
+    clouds = [];
+    for (let i = 0; i < 10; i++) clouds.push({ x: i * 360 + Math.random() * 200, y: 60 + Math.random() * 180, s: 0.4 + Math.random() * 0.5, r: 30 + Math.random() * 40 });
+    cameraX = 0;
+    spawnTimer = 0.6; rampTimer = 0;
+    score = 0; level = 1; lives = 3;
+    spinTimer = 0; spinCd = 0;
+    curSpawn = diff.spawn; curSpeed = diff.speed;
+    state = "playing";
+    el.menu.classList.add("hidden");
+    el.gameover.classList.add("hidden");
+    el.hud.classList.remove("hidden");
+    updateHud();
+  }
+
+  function endGame() {
+    state = "gameover";
+    if (score > highscore) { highscore = score; localStorage.setItem("kevin_highscore", String(highscore)); }
+    el.goScore.textContent = score;
+    el.goHs.textContent = highscore;
+    el.hsMenu.textContent = highscore;
+    el.hud.classList.add("hidden");
+    el.gameover.classList.remove("hidden");
+  }
+
+  function spawnDwarf() {
+    if (dwarves.length >= diff.max) return;
+    // abwechselnd links/rechts knapp außerhalb des Bildes
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const x = side === 1 ? cameraX + W + 40 : cameraX - 80;
+    dwarves.push({
+      x, y: GROUND_Y - 46, w: 38, h: 46,
+      vx: 0, vy: 0, dead: false, deadT: 0, squash: 0,
+      bob: Math.random() * Math.PI * 2,
+    });
+  }
+
+  function addParticles(x, y, color, n) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 80 + Math.random() * 220;
+      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80, life: 0.5 + Math.random() * 0.4, color });
+    }
+  }
+
+  // ----------------------------------------------------------------
+  //  Update
+  // ----------------------------------------------------------------
+  function update(dt) {
+    // Schwierigkeit hochrampen
+    rampTimer += dt;
+    if (rampTimer >= 12) {
+      rampTimer = 0;
+      curSpawn = Math.max(0.45, curSpawn * diff.ramp);
+      curSpeed = Math.min(260, curSpeed + 12);
+      level++;
+    }
+
+    // --- Spieler ---
+    const p = player;
+    p.prevBottom = p.y + p.h;
+
+    let move = 0;
+    if (input.left) move -= 1;
+    if (input.right) move += 1;
+    p.vx = move * MOVE_SPEED;
+    if (move !== 0) { p.face = move; p.runAnim += dt * Math.abs(p.vx) * 0.02; }
+
+    if (input.jumpEdge && p.onGround) { p.vy = JUMP_V; p.onGround = false; }
+    input.jumpEdge = false;
+
+    // Wirbelangriff
+    if (spinCd > 0) spinCd -= dt;
+    if (spinTimer > 0) spinTimer -= dt;
+    if (input.spinEdge && spinCd <= 0 && spinTimer <= 0) {
+      spinTimer = SPIN_DURATION; spinCd = SPIN_COOLDOWN;
+      addParticles(p.x + p.w / 2, p.y + p.h / 2, "#9ec7ff", 14);
+    }
+    input.spinEdge = false;
+
+    p.vy += GRAVITY * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    if (p.invuln > 0) p.invuln -= dt;
+
+    // Boden
+    p.onGround = false;
+    if (p.y + p.h >= GROUND_Y) { p.y = GROUND_Y - p.h; p.vy = 0; p.onGround = true; }
+
+    // Plattformen (einseitig, nur von oben landbar)
+    const plats = platformsInView();
+    for (const pl of plats) {
+      if (p.vy >= 0 && p.prevBottom <= pl.y + 4 &&
+          p.x + p.w > pl.x + 4 && p.x < pl.x + pl.w - 4 &&
+          p.y + p.h >= pl.y && p.y + p.h <= pl.y + pl.h + 18) {
+        p.y = pl.y - p.h; p.vy = 0; p.onGround = true;
+      }
+    }
+    p._plats = plats;
+
+    // Kamera folgt Kevin (etwas links der Mitte)
+    const targetCam = p.x - W * 0.38;
+    cameraX += (targetCam - cameraX) * Math.min(1, dt * 6);
+    if (cameraX < 0) cameraX = 0;
+
+    // --- Spawning ---
+    spawnTimer -= dt;
+    if (spawnTimer <= 0) { spawnDwarf(); spawnTimer = curSpawn * (0.7 + Math.random() * 0.6); }
+
+    // --- Zwerge ---
+    const pcx = p.x + p.w / 2, pcy = p.y + p.h / 2;
+    for (const d of dwarves) {
+      if (d.dead) {
+        d.deadT += dt;
+        d.x += d.vx * dt; d.y += d.vy * dt; d.vy += GRAVITY * dt;
+        d.squash = Math.min(1, d.squash + dt * 6);
+        continue;
+      }
+      // auf Kevin zulaufen
+      const dir = Math.sign((p.x + p.w / 2) - (d.x + d.w / 2)) || 1;
+      d.vx = dir * curSpeed;
+      d.x += d.vx * dt;
+      d.vy += GRAVITY * dt; d.y += d.vy * dt;
+      if (d.y + d.h >= GROUND_Y) { d.y = GROUND_Y - d.h; d.vy = 0; }
+      d.bob += dt * 8;
+
+      // Wirbelangriff trifft?
+      if (spinTimer > 0) {
+        const dx = (d.x + d.w / 2) - pcx, dy = (d.y + d.h / 2) - pcy;
+        if (dx * dx + dy * dy < SPIN_RADIUS * SPIN_RADIUS) {
+          killDwarf(d, Math.sign(dx) || 1, true);
+          continue;
+        }
+      }
+
+      // Kollision mit Kevin
+      if (rectsOverlap(p, d)) {
+        const stomp = p.vy > 0 && p.prevBottom <= d.y + 16;
+        if (stomp) {
+          killDwarf(d, p.face, false);
+          p.vy = STOMP_BOUNCE; p.onGround = false;
+        } else if (p.invuln <= 0) {
+          // Treffer: Leben verlieren
+          lives--;
+          p.invuln = 1.3;
+          p.vx = -p.face * 260; p.vy = -360;
+          addParticles(pcx, pcy, "#ff6060", 12);
+          updateHud();
+          if (lives <= 0) { endGame(); return; }
+        }
+      }
+    }
+
+    // tote/weit entfernte Zwerge entfernen
+    dwarves = dwarves.filter((d) => !(d.deadT > 1.4) && Math.abs(d.x - p.x) < 2200 && d.y < H + 400);
+
+    // --- Partikel ---
+    for (const pt of particles) { pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 1200 * dt; pt.life -= dt; }
+    particles = particles.filter((pt) => pt.life > 0);
+
+    // Punkte fürs Vorankommen
+    if (p.vx > 0) score += Math.round(p.vx * dt * 0.05);
+    updateHud();
+  }
+
+  function killDwarf(d, dir, bySpin) {
+    if (d.dead) return;
+    d.dead = true; d.deadT = 0; d.squash = bySpin ? 0 : 1;
+    score += bySpin ? 150 : 100;
+    if (bySpin) { d.vx = dir * 420; d.vy = -480 - Math.random() * 160; }
+    else { d.vx = 0; d.vy = 0; }
+    addParticles(d.x + d.w / 2, d.y + d.h / 2, bySpin ? "#9ec7ff" : "#ffd766", bySpin ? 16 : 10);
+    updateHud();
+  }
+
+  function updateHud() {
+    el.hearts.textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
+    el.score.textContent = score;
+    el.lvl.textContent = level;
+    const ready = spinCd <= 0 && spinTimer <= 0;
+    const pct = ready ? 100 : Math.round((1 - spinCd / SPIN_COOLDOWN) * 100);
+    el.spinbar.style.width = pct + "%";
+    el.spinlbl.textContent = ready ? "Wirbel bereit 🌀" : "Wirbel lädt …";
+  }
+
+  // ----------------------------------------------------------------
+  //  Rendering
+  // ----------------------------------------------------------------
+  function render() {
+    // Himmel
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#74c6ee"); sky.addColorStop(1, "#cdeefb");
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+    // Sonne
+    ctx.fillStyle = "#fff3b0"; ctx.beginPath(); ctx.arc(W - 150, 120, 56, 0, Math.PI * 2); ctx.fill();
+
+    // Wolken (Parallax)
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    for (const c of clouds) {
+      let cx = c.x - cameraX * c.s * 0.3; cx = ((cx % (W + 400)) + (W + 400)) % (W + 400) - 200;
+      drawCloud(cx, c.y, c.r);
+    }
+
+    // Hügel (Parallax)
+    drawHills(0.35, GROUND_Y - 60, "#7fc77a");
+    drawHills(0.6, GROUND_Y - 20, "#5fb35f");
+
+    ctx.save();
+    ctx.translate(-cameraX, 0);
+
+    // Boden
+    const gw = cameraX + W + 100;
+    ctx.fillStyle = "#7a5a37"; ctx.fillRect(cameraX - 50, GROUND_Y, W + 100, H - GROUND_Y);
+    ctx.fillStyle = "#5e9e3e"; ctx.fillRect(cameraX - 50, GROUND_Y, W + 100, 16);
+    // Boden-Grasbüschel
+    ctx.fillStyle = "#4e8a34";
+    for (let x = Math.floor((cameraX - 50) / 48) * 48; x < gw; x += 48) {
+      ctx.fillRect(x, GROUND_Y - 6, 6, 8); ctx.fillRect(x + 10, GROUND_Y - 9, 6, 11);
+    }
+
+    // Plattformen
+    if (player && player._plats) {
+      for (const pl of player._plats) {
+        ctx.fillStyle = "#7a5a37"; ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+        ctx.fillStyle = "#5e9e3e"; ctx.fillRect(pl.x, pl.y, pl.w, 7);
+      }
+    }
+
+    // Zwerge
+    for (const d of dwarves) drawDwarf(d);
+
+    // Kevin
+    drawKevin(player);
+
+    // Partikel
+    for (const pt of particles) {
+      ctx.globalAlpha = clamp(pt.life * 1.6, 0, 1);
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+
+  function drawCloud(x, y, r) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.arc(x + r, y + 8, r * 0.8, 0, Math.PI * 2);
+    ctx.arc(x - r, y + 10, r * 0.7, 0, Math.PI * 2);
+    ctx.arc(x + r * 0.4, y - 12, r * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawHills(speed, baseY, color) {
+    ctx.fillStyle = color;
+    const off = (cameraX * speed) % 400;
+    ctx.beginPath();
+    ctx.moveTo(-100, H);
+    for (let x = -100; x <= W + 100; x += 10) {
+      const wx = x + off;
+      const y = baseY - Math.sin((x + cameraX * speed) * 0.006) * 50 - 30;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W + 100, H); ctx.closePath(); ctx.fill();
+  }
+
+  function drawKevin(p) {
+    if (!p) return;
+    const blink = p.invuln > 0 && Math.floor(p.invuln * 12) % 2 === 0;
+    if (blink) return; // Blinken bei Unverwundbarkeit
+    const x = p.x, y = p.y, w = p.w, h = p.h;
+    const cx = x + w / 2;
+    ctx.save();
+
+    // Wirbel-Effekt
+    if (spinTimer > 0) {
+      const t = (SPIN_DURATION - spinTimer) / SPIN_DURATION;
+      ctx.globalAlpha = 0.4;
+      ctx.strokeStyle = "#8fd0ff"; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.arc(cx, y + h / 2, SPIN_RADIUS * (0.5 + t * 0.5), 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath(); ctx.arc(cx, y + h / 2, SPIN_RADIUS, t * 8, t * 8 + Math.PI * 1.3); ctx.lineWidth = 14; ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    const swing = p.onGround && Math.abs(p.vx) > 1 ? Math.sin(p.runAnim) * 8 : 0;
+
+    // Beine
+    ctx.fillStyle = "#2b3a55";
+    ctx.fillRect(cx - 14, y + h - 18 + swing * 0.2, 11, 18 - swing);
+    ctx.fillRect(cx + 3, y + h - 18 - swing * 0.2, 11, 18 + swing);
+    // Schuhe
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(cx - 16, y + h - 6, 14, 6);
+    ctx.fillRect(cx + 2, y + h - 6, 14, 6);
+
+    // Körper (grünes Shirt)
+    ctx.fillStyle = "#3fae5a";
+    roundRect(cx - 16, y + 20, 32, 26, 6); ctx.fill();
+    // Arme
+    ctx.fillStyle = "#3fae5a";
+    const armY = spinTimer > 0 ? y + 18 : y + 24;
+    ctx.fillRect(cx - 20, armY, 7, 16);
+    ctx.fillRect(cx + 13, armY, 7, 16);
+    // Hände
+    ctx.fillStyle = "#f0c08a";
+    ctx.fillRect(cx - 21, armY + 14, 8, 7);
+    ctx.fillRect(cx + 13, armY + 14, 8, 7);
+
+    // Kopf
+    ctx.fillStyle = "#f5ca9a";
+    roundRect(cx - 13, y - 2, 26, 26, 8); ctx.fill();
+    // Haare
+    ctx.fillStyle = "#5a3a1c";
+    roundRect(cx - 13, y - 4, 26, 11, 6); ctx.fill();
+    // Mütze-Schirm / Stirn
+    // Augen (Blickrichtung)
+    ctx.fillStyle = "#fff";
+    const ex = p.face >= 0 ? 2 : -2;
+    ctx.fillRect(cx - 8 + ex, y + 8, 6, 7);
+    ctx.fillRect(cx + 2 + ex, y + 8, 6, 7);
+    ctx.fillStyle = "#1b2230";
+    ctx.fillRect(cx - 6 + ex + (p.face >= 0 ? 1 : 0), y + 10, 3, 4);
+    ctx.fillRect(cx + 4 + ex + (p.face >= 0 ? 1 : 0), y + 10, 3, 4);
+    // Mund
+    ctx.fillStyle = "#9a4b3b";
+    ctx.fillRect(cx - 4 + ex, y + 19, 9, 3);
+
+    ctx.restore();
+  }
+
+  function drawDwarf(d) {
+    const x = d.x, y = d.y, w = d.w, h = d.h, cx = x + w / 2;
+    ctx.save();
+    if (d.dead) {
+      ctx.globalAlpha = clamp(1.4 - d.deadT, 0, 1);
+      if (d.squash >= 1 && d.vx === 0 && d.vy === 0) {
+        // platt gestampft
+        ctx.translate(0, (h * 0.7));
+        ctx.scale(1, 0.3);
+      } else {
+        // weggewirbelt: rotieren
+        ctx.translate(cx, y + h / 2);
+        ctx.rotate(d.deadT * 12 * Math.sign(d.vx || 1));
+        ctx.translate(-cx, -(y + h / 2));
+      }
+    }
+    const bob = d.dead ? 0 : Math.sin(d.bob) * 1.5;
+
+    // Beine
+    ctx.fillStyle = "#3a2a18";
+    ctx.fillRect(cx - 10, y + h - 10 + bob, 7, 10);
+    ctx.fillRect(cx + 3, y + h - 10 - bob, 7, 10);
+    // Tunika (rot)
+    ctx.fillStyle = "#c5483f";
+    roundRect(cx - 14, y + 16, 28, 22, 5); ctx.fill();
+    // Gürtel
+    ctx.fillStyle = "#6e3a22"; ctx.fillRect(cx - 14, y + 30, 28, 5);
+    // Gesicht
+    ctx.fillStyle = "#f3c89e";
+    roundRect(cx - 11, y + 8, 22, 14, 5); ctx.fill();
+    // Bart (weiß)
+    ctx.fillStyle = "#f2f2f2";
+    ctx.beginPath();
+    ctx.moveTo(cx - 11, y + 16);
+    ctx.lineTo(cx + 11, y + 16);
+    ctx.lineTo(cx + 6, y + 30);
+    ctx.lineTo(cx, y + 26);
+    ctx.lineTo(cx - 6, y + 30);
+    ctx.closePath(); ctx.fill();
+    // Augen
+    ctx.fillStyle = "#1b2230";
+    ctx.fillRect(cx - 6, y + 12, 3, 3);
+    ctx.fillRect(cx + 3, y + 12, 3, 3);
+    // Zipfelmütze (rot)
+    ctx.fillStyle = "#d6322b";
+    ctx.beginPath();
+    ctx.moveTo(cx - 13, y + 9);
+    ctx.lineTo(cx + 13, y + 9);
+    ctx.lineTo(cx + 2, y - 14);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx + 2, y - 14, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  // ----------------------------------------------------------------
+  //  Hauptschleife
+  // ----------------------------------------------------------------
+  let last = performance.now();
+  function loop(now) {
+    let dt = (now - last) / 1000;
+    last = now;
+    if (dt > 1 / 30) dt = 1 / 30;     // große Sprünge (Tab-Wechsel) begrenzen
+    if (state === "playing") update(dt);
+    if (state === "playing" || state === "gameover") render();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ----------------------------------------------------------------
+  //  Menü-Buttons
+  // ----------------------------------------------------------------
+  document.querySelectorAll("#menu .btn[data-diff]").forEach((b) =>
+    b.addEventListener("click", () => startGame(b.dataset.diff))
+  );
+  document.getElementById("retry").addEventListener("click", () =>
+    startGame(Object.keys(DIFFICULTY).find((k) => DIFFICULTY[k] === diff) || "mittel")
+  );
+  document.getElementById("tomenu").addEventListener("click", () => {
+    state = "menu"; el.gameover.classList.add("hidden"); el.menu.classList.remove("hidden");
+    el.hsMenu.textContent = highscore;
+  });
+})();
+</script>
+</body>
+</html>
