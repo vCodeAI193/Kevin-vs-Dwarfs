@@ -8,6 +8,9 @@ wird es zusätzlich immer schneller.
 Komplett in **einer Datei** (`index.html`), kein Build, keine Abhängigkeiten —
 funktioniert auf Desktop **und** mobil (Touch-Steuerung).
 
+> 📖 Mehr: Spielkonzept & Aufbau → [`KONZEPT.md`](KONZEPT.md) ·
+> geplante Features & Roadmap → [`FEATURES.md`](FEATURES.md)
+
 ## Spielen
 
 Einfach `index.html` im Browser öffnen — Doppelklick reicht. Optional über einen
