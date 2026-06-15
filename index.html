@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kevin gegen die Zwerge</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #1b1033;
+      color: #f5f0ff;
+      font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: 0.5px;
+    }
+    #game {
+      background: #87b7e8;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+      max-width: 95vw;
+      height: auto;
+      image-rendering: pixelated;
+    }
+    .hint {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    .hint b { color: #ffd84d; }
+  </style>
+</head>
+<body>
+  <h1>⚔️ Kevin gegen die Zwerge</h1>
+  <canvas id="game" width="800" height="400"></canvas>
+  <p class="hint">
+    <b>→ / D</b> laufen &nbsp;·&nbsp; <b>Leertaste / ↑ / W</b> springen &nbsp;·&nbsp;
+    <b>Shift / F</b> Wirbelsturm
+  </p>
+
+  <!-- Reihenfolge wichtig: Klassen vor dem Game-Loop laden -->
+  <script src="src/player.js"></script>
+  <script src="src/enemies.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
