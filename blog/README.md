@@ -34,3 +34,4 @@ scripts/setup-hooks.sh
 |-------|-------|
 | 2026-06-15 | [Ein Canvas-Spiel ohne Abhängigkeiten testbar machen](./2026-06-15-canvas-spiel-testbar-machen.md) |
 | 2026-06-15 | [Zufall, Sound und localStorage testbar machen — ohne Browser](./2026-06-15-zufall-und-browser-apis-testbar.md) |
+| 2026-06-16 | [Der Boss, der den Helden nie traf — ein Koordinaten-Denkfehler](./2026-06-16-der-boss-der-den-helden-nie-traf.md) |

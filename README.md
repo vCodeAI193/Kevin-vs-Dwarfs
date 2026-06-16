@@ -19,6 +19,9 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 - 🧝 **Zwerg-Typen:** normal, schnell und gepanzert (nur per Wirbelsturm besiegbar)
 - 🪨 **Hindernisse** (Felsen) zum Drüberspringen
 - 🪙 **Münzen** sammeln für Punkte und etwas Extra-Power
+- ⚡ **Power-Ups:** Doppelsprung, Schild (fängt einen tödlichen Treffer ab) und Magnet
+- 👹 **Bosskampf:** der Zwergenkönig taucht in Distanz-Abständen auf, hält mehrere
+  Treffer aus und bringt einen Score-Bonus
 - 🏆 **Highscore** dauerhaft gespeichert (localStorage)
 - 🔊 **Sound** (synthetisch über Web Audio, ohne Dateien) & ✨ Partikel-Effekte
 - ⏸️ **Pause** (P/Esc) und Ton an/aus (M)
@@ -53,6 +56,8 @@ Kevin-vs-Dwarfs/
 │   ├── enemies.js      # Zwerge: Typen, Spawn, Bewegung
 │   ├── collectibles.js # Münzen: Spawn, Einsammeln
 │   ├── obstacles.js    # Hindernisse (Felsen)
+│   ├── powerups.js     # Power-Ups: Doppelsprung, Schild, Magnet
+│   ├── boss.js         # Bosskampf (Zwergenkönig)
 │   ├── collision.js    # reine Kollisions-Logik (testbar)
 │   ├── particles.js    # Partikel-Effekte
 │   ├── audio.js        # synthetische Soundeffekte (Web Audio)
@@ -85,10 +90,11 @@ Abhängigkeiten**:
 npm test      # oder: node --test
 ```
 
-Getestet werden u. a. Sprung/Schwerkraft, das Füllen und Auslösen des Wirbelsturms,
-die Zwerg-Typen, das Spawnen/Entfernen von Zwergen, Münzen und Hindernissen, der
-Betäubungs-Timer, das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
-Überlapp-Erkennung (`src/collision.js`). Aktuell **48 Tests**.
+Getestet werden u. a. Sprung/Schwerkraft, Doppelsprung, Power-Ups und Schild/i-Frames,
+das Füllen und Auslösen des Wirbelsturms, die Zwerg-Typen, das Spawnen/Entfernen von
+Zwergen, Münzen, Hindernissen und Power-Ups, die Boss-Mechanik (HP, Unverwundbarkeit,
+Patrouille), das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
+Überlapp-Erkennung (`src/collision.js`). Aktuell **64 Tests**.
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).

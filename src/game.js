@@ -13,15 +13,21 @@
   const enemies = new EnemyManager(W, GROUND_Y);
   const coins = new CoinManager(W, GROUND_Y);
   const obstacles = new ObstacleManager(W, GROUND_Y);
+  const powerups = new PowerUpManager(W, GROUND_Y);
   const particles = new ParticleSystem();
   const sound = new SoundFX();
   const storage = typeof localStorage !== "undefined" ? localStorage : null;
+
+  const BOSS_INTERVAL = 1500; // Distanz zwischen Bosskämpfen
+  let boss = null;
+  let nextBossDistance = BOSS_INTERVAL;
 
   // Spielzustand: "ready" | "playing" | "paused" | "gameover"
   let state = "ready";
   let score = 0;
   let kills = 0;
   let coinsCollected = 0;
+  let bossBonus = 0;
   let distance = 0;
   let worldSpeed = 4;
   let elapsed = 0; // Sekunden seit Spielstart (für Schwierigkeit)
@@ -69,6 +75,7 @@
     score = 0;
     kills = 0;
     coinsCollected = 0;
+    bossBonus = 0;
     distance = 0;
     worldSpeed = 4;
     elapsed = 0;
@@ -76,7 +83,10 @@
     enemies.reset();
     coins.reset();
     obstacles.reset();
+    powerups.reset();
     particles.reset();
+    boss = null;
+    nextBossDistance = BOSS_INTERVAL;
   }
 
   function togglePause() {
@@ -105,6 +115,25 @@
   }
 
   // ---- Kollisionen (Hilfsfunktionen siehe collision.js) ----
+
+  /**
+   * Versucht, einen sonst tödlichen Treffer zu überleben: via aktiver i-Frames oder
+   * durch Verbrauch des Schilds (der dann kurze Unverwundbarkeit gewährt).
+   * Gibt true zurück, wenn Kevin überlebt.
+   */
+  function survivesFatalHit() {
+    if (player.invulnerable) return true;
+    if (player.consumeShield()) {
+      player.grantInvulnerability(1.0);
+      particles.emit(player.x + player.width / 2, player.y + player.height / 2, 18, {
+        color: "#4ad0ff", speed: 240, life: 0.5, size: 4,
+      });
+      sound.stomp();
+      return true;
+    }
+    return false;
+  }
+
   function defeatDwarf(d) {
     d.alive = false;
     kills++;
@@ -143,6 +172,10 @@
           player.onGround = false;
         }
       } else {
+        if (survivesFatalHit()) {
+          d.stun(player.whirlStunTime);
+          continue;
+        }
         gameOver();
         return;
       }
@@ -152,9 +185,82 @@
   function handleObstacleCollisions() {
     for (const o of obstacles.obstacles) {
       if (rectsOverlap(player, o)) {
+        if (survivesFatalHit()) {
+          o.x = -9999; // abgefangenes Hindernis entfernen
+          continue;
+        }
         gameOver();
         return;
       }
+    }
+  }
+
+  function handlePowerUpCollisions() {
+    for (const p of powerups.items) {
+      if (!p.collected && rectsOverlap(player, p)) {
+        p.collected = true;
+        player.activatePowerUp(p.type);
+        particles.emit(p.x + p.width / 2, p.y + p.height / 2, 14, {
+          color: p.color, speed: 200, life: 0.5, size: 4,
+        });
+        sound.coin();
+      }
+    }
+  }
+
+  // Magnet: zieht Münzen in Reichweite zu Kevin
+  function applyMagnet(dt) {
+    if (!player.hasMagnet) return;
+    const px = player.x + player.width / 2;
+    const py = player.y + player.height / 2;
+    for (const c of coins.coins) {
+      const dx = px - (c.x + c.width / 2);
+      const dy = py - (c.y + c.height / 2);
+      const dist = Math.hypot(dx, dy);
+      if (dist < player.magnetRadius && dist > 1) {
+        const pull = 320 * dt;
+        c.x += (dx / dist) * pull;
+        c.y += (dy / dist) * pull;
+      }
+    }
+  }
+
+  // ---- Boss ----
+  function spawnBoss() {
+    const hp = 3 + Math.floor(nextBossDistance / BOSS_INTERVAL); // wird mit der Zeit zäher
+    boss = new Boss(W, GROUND_Y, hp);
+    enemies.dwarves = []; // Arena freiräumen
+    obstacles.obstacles = [];
+  }
+
+  function defeatBoss() {
+    particles.emit(boss.x + boss.width / 2, boss.y + boss.height / 2, 40, {
+      color: "#ffd84d", speed: 360, life: 0.8, size: 6,
+    });
+    sound.whirlwind();
+    bossBonus += 500; // fließt über die Score-Formel in den Gesamtwert
+    boss = null;
+    nextBossDistance += BOSS_INTERVAL;
+  }
+
+  function handleBossCollision() {
+    if (!boss || !boss.alive) return;
+    if (!rectsOverlap(player, boss)) return;
+
+    if (isStomp(player, boss) || player.whirlActive) {
+      if (boss.hit()) {
+        player.addKillPower();
+        particles.emit(player.x + player.width / 2, player.y + player.height, 10, {
+          color: "#d8a", speed: 180, life: 0.4, size: 4,
+        });
+        sound.stomp();
+      }
+      player.vy = -player.jumpForce * 0.7;
+      player.onGround = false;
+      if (!boss.alive) defeatBoss();
+    } else {
+      if (survivesFatalHit()) return;
+      gameOver();
     }
   }
 
@@ -193,17 +299,31 @@
     bgOffset = (bgOffset + worldSpeed * 0.4) % W;
     distance += worldSpeed * dt * 10;
 
+    // Boss-Phase starten, wenn die nächste Distanz-Schwelle erreicht ist
+    if (!boss && distance >= nextBossDistance) spawnBoss();
+
     player.update(dt);
-    enemies.update(dt, worldSpeed, difficulty);
     coins.update(dt, worldSpeed);
-    obstacles.update(dt, worldSpeed, difficulty);
+    powerups.update(dt, worldSpeed);
     particles.update(dt);
+    applyMagnet(dt);
 
-    handleDwarfCollisions();
-    if (state === "playing") handleObstacleCollisions();
+    if (boss) {
+      boss.update(dt, worldSpeed);
+      handleBossCollision();
+    } else {
+      // Normale Gegner & Hindernisse nur außerhalb der Boss-Phase
+      enemies.update(dt, worldSpeed, difficulty);
+      obstacles.update(dt, worldSpeed, difficulty);
+      handleDwarfCollisions();
+      if (state === "playing") handleObstacleCollisions();
+    }
+
     handleCoinCollisions();
+    handlePowerUpCollisions();
 
-    score = Math.floor(distance) + kills * 50 + coinsCollected * COIN_VALUE;
+    score =
+      Math.floor(distance) + kills * 50 + coinsCollected * COIN_VALUE + bossBonus;
   }
 
   // ---- Zeichnen ----
@@ -248,6 +368,26 @@
     ctx.font = "bold 12px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(player.powerFull ? "WIRBELSTURM BEREIT! (F)" : "Wirbelsturm", barX + barW / 2, barY + 30);
+
+    // Aktive Power-Ups
+    const active = [];
+    if (player.hasDoubleJump) active.push(["Doppelsprung", player.doubleJumpTimer, "#7cf"]);
+    if (player.hasShield) active.push(["Schild", player.shieldTimer, "#4ad0ff"]);
+    if (player.hasMagnet) active.push(["Magnet", player.magnetTimer, "#ff6fae"]);
+    ctx.textAlign = "right";
+    ctx.font = "bold 13px system-ui, sans-serif";
+    active.forEach(([label, t, color], i) => {
+      ctx.fillStyle = color;
+      ctx.fillText(label + " " + Math.ceil(t) + "s", W - 16, 58 + i * 18);
+    });
+
+    // Boss-Hinweis
+    if (boss) {
+      ctx.fillStyle = "#6a3d8f";
+      ctx.font = "bold 18px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("⚔️ Zwergenkönig!", W / 2, 28);
+    }
   }
 
   function drawCenterText(title, subtitle) {
@@ -265,7 +405,9 @@
     drawBackground();
     obstacles.draw(ctx);
     coins.draw(ctx);
+    powerups.draw(ctx);
     enemies.draw(ctx);
+    if (boss) boss.draw(ctx);
     player.draw(ctx);
     particles.draw(ctx);
 

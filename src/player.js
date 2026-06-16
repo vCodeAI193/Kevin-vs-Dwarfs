@@ -20,6 +20,10 @@ class Player {
     this.whirlVisualTime = 0.6; // Sekunden Dreh-Animation
     this.whirlStunTime = 3.0; // Sekunden, die Zwerge umgeworfen bleiben
 
+    // Power-Up-Dauern (Sekunden)
+    this.powerUpDurations = { doublejump: 9, shield: 7, magnet: 8 };
+    this.magnetRadius = 220;
+
     this.reset();
   }
 
@@ -30,6 +34,19 @@ class Player {
     this.power = 0;
     this.whirlTimer = 0; // > 0 -> Wirbelsturm-Animation läuft
     this.spin = 0; // Rotationswinkel für die Animation
+    this.jumpsUsed = 0; // für Doppelsprung
+    this.doubleJumpTimer = 0;
+    this.shieldTimer = 0;
+    this.magnetTimer = 0;
+    this.invulnTimer = 0; // kurze i-Frames nach einem abgefangenen Treffer
+  }
+
+  get invulnerable() {
+    return this.invulnTimer > 0;
+  }
+
+  grantInvulnerability(seconds) {
+    this.invulnTimer = Math.max(this.invulnTimer, seconds);
   }
 
   get powerFull() {
@@ -40,11 +57,49 @@ class Player {
     return this.whirlTimer > 0;
   }
 
+  get hasDoubleJump() {
+    return this.doubleJumpTimer > 0;
+  }
+
+  get hasShield() {
+    return this.shieldTimer > 0;
+  }
+
+  get hasMagnet() {
+    return this.magnetTimer > 0;
+  }
+
+  /** Aktiviert ein eingesammeltes Power-Up. Gibt true bei bekanntem Typ. */
+  activatePowerUp(type) {
+    const d = this.powerUpDurations[type];
+    if (!d) return false;
+    if (type === "doublejump") this.doubleJumpTimer = d;
+    else if (type === "shield") this.shieldTimer = d;
+    else if (type === "magnet") this.magnetTimer = d;
+    return true;
+  }
+
+  /** Verbraucht den Schild (z. B. bei einem sonst tödlichen Treffer). */
+  consumeShield() {
+    if (this.shieldTimer <= 0) return false;
+    this.shieldTimer = 0;
+    return true;
+  }
+
   jump() {
     if (this.onGround) {
       this.vy = -this.jumpForce;
       this.onGround = false;
+      this.jumpsUsed = 1;
+      return true;
     }
+    // Doppelsprung in der Luft (nur mit aktivem Power-Up)
+    if (this.hasDoubleJump && this.jumpsUsed < 2) {
+      this.vy = -this.jumpForce;
+      this.jumpsUsed = 2;
+      return true;
+    }
+    return false;
   }
 
   /** Erhöht die Power-Leiste um einen Betrag (gedeckelt bei powerMax). */
@@ -73,6 +128,7 @@ class Player {
       this.y = this.groundY - this.height;
       this.vy = 0;
       this.onGround = true;
+      this.jumpsUsed = 0; // beim Landen Sprünge zurücksetzen
     }
 
     // Wirbelsturm-Animation herunterzählen
@@ -80,6 +136,12 @@ class Player {
       this.whirlTimer -= dt;
       this.spin += dt * 30;
     }
+
+    // Power-Up-Timer herunterzählen
+    if (this.doubleJumpTimer > 0) this.doubleJumpTimer -= dt;
+    if (this.shieldTimer > 0) this.shieldTimer -= dt;
+    if (this.magnetTimer > 0) this.magnetTimer -= dt;
+    if (this.invulnTimer > 0) this.invulnTimer -= dt;
   }
 
   draw(ctx) {
@@ -94,6 +156,18 @@ class Player {
       ctx.beginPath();
       ctx.arc(cx, cy, this.whirlRadius * (1 - this.whirlTimer / this.whirlVisualTime + 0.3), 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+
+    // Schild-Aura
+    if (this.hasShield) {
+      ctx.save();
+      ctx.globalAlpha = 0.4 + 0.2 * Math.sin(performance.now() / 100);
+      ctx.strokeStyle = "#4ad0ff";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, this.width, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
 

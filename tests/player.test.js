@@ -76,3 +76,48 @@ test("reset() setzt Power und Position zurück", () => {
   assert.equal(p.onGround, true);
   assert.equal(p.vy, 0);
 });
+
+test("ohne Power-Up gibt es keinen zweiten Sprung in der Luft", () => {
+  const p = freshPlayer();
+  assert.equal(p.jump(), true); // vom Boden
+  assert.equal(p.jump(), false); // in der Luft, kein Doppelsprung
+});
+
+test("Doppelsprung-Power-Up erlaubt genau einen zweiten Sprung", () => {
+  const p = freshPlayer();
+  p.activatePowerUp("doublejump");
+  assert.equal(p.jump(), true); // 1. Sprung
+  assert.equal(p.jump(), true); // 2. Sprung (Doppelsprung)
+  assert.equal(p.jump(), false); // kein dritter
+});
+
+test("activatePowerUp setzt die jeweiligen Flags und läuft ab", () => {
+  const p = freshPlayer();
+  p.activatePowerUp("shield");
+  p.activatePowerUp("magnet");
+  assert.equal(p.hasShield, true);
+  assert.equal(p.hasMagnet, true);
+  // unbekannter Typ wird abgelehnt
+  assert.equal(p.activatePowerUp("quatsch"), false);
+  // Timer laufen ab
+  for (let i = 0; i < 60 * 10; i++) p.update(1 / 60);
+  assert.equal(p.hasShield, false);
+  assert.equal(p.hasMagnet, false);
+});
+
+test("consumeShield verbraucht den Schild genau einmal", () => {
+  const p = freshPlayer();
+  assert.equal(p.consumeShield(), false); // kein Schild
+  p.activatePowerUp("shield");
+  assert.equal(p.consumeShield(), true);
+  assert.equal(p.hasShield, false);
+  assert.equal(p.consumeShield(), false);
+});
+
+test("grantInvulnerability schützt für die angegebene Zeit", () => {
+  const p = freshPlayer();
+  p.grantInvulnerability(1.0);
+  assert.equal(p.invulnerable, true);
+  for (let i = 0; i < 70; i++) p.update(1 / 60);
+  assert.equal(p.invulnerable, false);
+});

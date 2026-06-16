@@ -159,6 +159,32 @@ auch headless überlebt.
 
 ---
 
+### 2026-06-16 — Der Boss, der Kevin nie erreichte
+
+**Situation:** Power-Ups (Doppelsprung, Schild, Magnet) und ein Bosskampf kamen
+dazu. Der Boss sollte von rechts hereinlaufen, stehen bleiben und sich von Kevin
+anspringen lassen.
+
+**Problem / Fehler:** Schon beim Code-Review – nicht erst im Test – fiel auf: Kevin
+steht **fest** bei x≈130, und die Welt scrollt an ihm vorbei. Der Boss aber sollte
+bei x≈570 „stehen bleiben". Zwei Objekte, die sich nie am selben Ort befinden,
+können nicht kollidieren – der Bosskampf wäre komplett unspielbar gewesen, ohne dass
+ein einziger Test fehlgeschlagen wäre (die Unit-Tests prüften nur HP und Timer, nicht
+die Geometrie zweier bewegter Objekte).
+
+**Lösung:** Der Boss bleibt nicht stehen, sondern **patrouilliert horizontal** durch
+Kevins Position. Steht Kevin am Boden, wenn der Boss heranrückt, muss er springen –
+und im Fallen landet er auf dem Kopf (Stomp = Treffer). Damit das nicht wieder still
+durchrutscht, prüft jetzt ein Test gezielt, dass der Boss bis `x <= 130` vordringt.
+
+**Lektion:** Beim festen Helden mit scrollender Welt muss man ständig die Frage
+stellen „treffen sich diese beiden x-Koordinaten überhaupt jemals?". Und: Unit-Tests
+für Einzelobjekte fangen **Beziehungs-Bugs** zwischen Objekten nicht – dafür braucht
+es entweder einen Integrationstest oder, wie hier, ein wachsames Code-Review und
+einen gezielten Test auf die räumliche Beziehung.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -171,3 +197,5 @@ auch headless überlebt.
   zufallsbehaftete Logik deterministisch testen.
 - **Browser-APIs absichern.** Hinter eine Verfügbarkeitsprüfung legen, dann läuft
   derselbe Code im Browser und headless in den Tests.
+- **Beziehungs-Bugs brauchen eigene Tests.** Grüne Unit-Tests pro Objekt heißen
+  nicht, dass zwei Objekte je zueinanderfinden – Geometrie zwischen ihnen extra prüfen.
