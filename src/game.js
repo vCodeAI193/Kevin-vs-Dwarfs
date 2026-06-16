@@ -44,7 +44,7 @@
     if (jumpKeys.includes(e.code) || whirlKeys.includes(e.code)) e.preventDefault();
 
     if (e.code === "KeyM") {
-      sound.setEnabled(sound.muted);
+      toggleSound();
       return;
     }
     if (e.code === "KeyP" || e.code === "Escape") {
@@ -64,11 +64,39 @@
     }
   });
 
-  canvas.addEventListener("pointerdown", () => {
+  // Geteilte Aktionen – von Tastatur, Canvas-Tap und Bildschirm-Buttons genutzt
+  function primaryAction() {
     sound.resume();
     if (state === "playing") doJump();
     else if (state !== "paused") startGame();
-  });
+  }
+
+  function whirlwindAction() {
+    sound.resume();
+    if (state === "playing") doWhirlwind();
+  }
+
+  function toggleSound() {
+    sound.setEnabled(sound.muted); // muted umschalten
+    const btn = document.getElementById("btn-sound");
+    if (btn) btn.textContent = sound.muted ? "🔇 Ton" : "🔊 Ton";
+  }
+
+  canvas.addEventListener("pointerdown", primaryAction);
+
+  // Bildschirm-Buttons (Touch & Maus). pointerdown für direkte Reaktion auf Touch.
+  function bindButton(id, handler) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      handler();
+    });
+  }
+  bindButton("btn-jump", primaryAction);
+  bindButton("btn-whirl", whirlwindAction);
+  bindButton("btn-pause", togglePause);
+  bindButton("btn-sound", toggleSound);
 
   function startGame() {
     state = "playing";

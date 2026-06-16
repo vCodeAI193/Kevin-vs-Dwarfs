@@ -185,6 +185,35 @@ einen gezielten Test auf die räumliche Beziehung.
 
 ---
 
+### 2026-06-16 — Vom Desktop-Spiel zum Handy-Spiel: eine Eingabequelle, drei Wege
+
+**Situation:** Das Spiel war voll spielbar — aber nur mit Tastatur. Auf dem Handy
+ließ sich per Tippen nur springen; Wirbelsturm, Pause und Ton waren unerreichbar.
+Damit war ein Browser-Spiel, das man per Link teilt, auf dem wichtigsten Gerät kaputt.
+
+**Problem / Fehler:** Der naheliegende Reflex wäre, die Touch-Logik einfach neben die
+Tastatur-Logik zu kopieren. Dann gäbe es zwei Stellen mit denselben Spielregeln
+(„im Game-Over-Bild startet Springen neu"), die mit der Zeit auseinanderdriften.
+
+**Lösung:** Eine **Aktion, viele Auslöser**. Die eigentliche Logik liegt in kleinen
+Funktionen (`primaryAction`, `whirlwindAction`, `togglePause`, `toggleSound`), und
+Tastatur, Canvas-Tap und die neuen Bildschirm-Buttons rufen alle dieselben Funktionen
+auf. Die Touch-Buttons (springen/Wirbelsturm) blendet CSS nur auf Geräten ohne Maus
+ein – via `@media (pointer: coarse)`. Favicon und Open-Graph-Daten stecken als Inline-
+SVG bzw. Meta-Tags direkt im HTML, also weiterhin **ohne ein einziges Asset**.
+
+Zusätzlich kam ein **Smoke-Test** dazu: Er liest `index.html`, prüft, dass jede
+eingebundene `src/*.js` existiert – und umgekehrt, dass jede Datei auch eingebunden
+ist. Genau der „ich hab das neue Skript vergessen einzubinden"-Fehler wird so
+unmöglich.
+
+**Lektion:** Eingabe-Quellen (Taste, Maus, Touch, Button) sind nur *Auslöser* – die
+Spiellogik gehört in eine gemeinsame Funktion, nicht in jeden Handler kopiert. Und:
+Ein winziger Smoke-Test über die `index.html` sichert die Verdrahtung ab, die die
+Unit-Tests per Definition nicht sehen.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -199,3 +228,7 @@ einen gezielten Test auf die räumliche Beziehung.
   derselbe Code im Browser und headless in den Tests.
 - **Beziehungs-Bugs brauchen eigene Tests.** Grüne Unit-Tests pro Objekt heißen
   nicht, dass zwei Objekte je zueinanderfinden – Geometrie zwischen ihnen extra prüfen.
+- **Eine Aktion, viele Auslöser.** Taste, Tap und Button rufen dieselbe Funktion –
+  Logik nie pro Eingabequelle kopieren.
+- **Verdrahtung smoke-testen.** Ein Test über die `index.html` fängt vergessene
+  `<script>`-Tags, die Unit-Tests nie bemerken.

@@ -2,7 +2,15 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Kevin gegen die Zwerge – ein rasantes 2D-Endlos-Jump-&-Run für den Browser. Springe auf Zwerge, sammle Münzen und entfessle den Wirbelsturm." />
+  <meta name="theme-color" content="#1b1033" />
+  <!-- Open Graph fürs Teilen -->
+  <meta property="og:title" content="Kevin gegen die Zwerge" />
+  <meta property="og:description" content="Ein 2D-Endlos-Jump-&-Run für den Browser. Wie weit kommst du?" />
+  <meta property="og:type" content="website" />
+  <!-- Inline-SVG-Favicon (kein Asset nötig) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231b1033'/%3E%3Ctext x='32' y='44' font-size='38' text-anchor='middle'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E" />
   <title>Kevin gegen die Zwerge</title>
   <style>
     :root { color-scheme: dark; }
@@ -18,34 +26,98 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
+      padding: 8px;
+      box-sizing: border-box;
     }
     h1 {
       margin: 0;
       font-size: 1.4rem;
       letter-spacing: 0.5px;
     }
+    .stage {
+      position: relative;
+      display: inline-block;
+      max-width: 95vw;
+    }
     #game {
+      display: block;
+      width: 100%;
+      height: auto;
       background: #87b7e8;
       border-radius: 12px;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
-      max-width: 95vw;
-      height: auto;
       image-rendering: pixelated;
+      touch-action: manipulation;
     }
+    /* Große Touch-Flächen, überlagern das Canvas in den unteren Ecken */
+    .touch-btn {
+      position: absolute;
+      bottom: 14px;
+      width: 76px;
+      height: 76px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(27, 16, 51, 0.45);
+      color: #fff;
+      font-size: 30px;
+      line-height: 1;
+      display: none; /* nur auf Touch-Geräten einblenden */
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .touch-btn:active { background: rgba(27, 16, 51, 0.7); }
+    .touch-jump { left: 14px; }
+    .touch-whirl { right: 14px; }
+    /* Auf Geräten ohne präzisen Zeiger (Touch) die Overlay-Buttons zeigen */
+    @media (hover: none), (pointer: coarse) {
+      .touch-btn { display: flex; }
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+    .controls button {
+      background: #2e2257;
+      color: #f5f0ff;
+      border: 1px solid #4a3a7a;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .controls button:active { background: #3a2c6e; }
     .hint {
       font-size: 0.85rem;
       opacity: 0.7;
+      text-align: center;
+      max-width: 95vw;
     }
     .hint b { color: #ffd84d; }
   </style>
 </head>
 <body>
   <h1>⚔️ Kevin gegen die Zwerge</h1>
-  <canvas id="game" width="800" height="400"></canvas>
+
+  <div class="stage">
+    <canvas id="game" width="800" height="400"></canvas>
+    <button class="touch-btn touch-jump" id="btn-jump" aria-label="Springen / Start">⤴</button>
+    <button class="touch-btn touch-whirl" id="btn-whirl" aria-label="Wirbelsturm">🌀</button>
+  </div>
+
+  <div class="controls">
+    <button id="btn-pause" aria-label="Pause">⏸ Pause</button>
+    <button id="btn-sound" aria-label="Ton an/aus">🔊 Ton</button>
+  </div>
+
   <p class="hint">
     <b>Leertaste / ↑ / W</b> springen &nbsp;·&nbsp; <b>Shift / F</b> Wirbelsturm
-    &nbsp;·&nbsp; <b>P / Esc</b> Pause &nbsp;·&nbsp; <b>M</b> Ton an/aus
+    &nbsp;·&nbsp; <b>P / Esc</b> Pause &nbsp;·&nbsp; <b>M</b> Ton
+    <br />Auf dem Handy: die Tasten unten am Spielfeld nutzen.
   </p>
 
   <!-- Reihenfolge wichtig: Klassen vor dem Game-Loop laden -->

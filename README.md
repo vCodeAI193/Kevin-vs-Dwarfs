@@ -33,17 +33,20 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 - Bewusst leichtgewichtig: einfach teilbar (eine `index.html`), niedrige Einstiegshürde,
   spätere Migration auf ein Build-Tool oder eine Engine bleibt möglich.
 
-## Roadmap zum ersten Prototyp
+## Entwicklungs-Roadmap (umgesetzt)
 
-Jeder Meilenstein ist ein eigenständig spielbarer Schritt:
+Der ursprüngliche Prototyp entstand in spielbaren Meilensteinen — alle sind erledigt:
 
-| Meilenstein | Ziel |
-|-------------|------|
-| **M0 – Gerüst** | `index.html` mit Canvas, Game-Loop läuft, „Kevin" (Rechteck) steht auf dem Boden. |
-| **M1 – Bewegung & Sprung** | Schwerkraft, Springen per Leertaste, Welt scrollt nach links (Endlos-Lauf-Gefühl). |
-| **M2 – Zwerge & Stomp** | Zwerge spawnen von rechts; Sprung auf den Kopf besiegt sie, seitlicher Kontakt = Game Over. |
-| **M3 – Wirbelsturm** | Power-Leiste füllt sich pro Kill; ausgelöst werden alle Zwerge im Umkreis kurz umgeworfen. |
-| **M4 – Score & Loop** | Distanz-/Score-Anzeige, Game-Over-Screen, Neustart, ansteigende Schwierigkeit. |
+| Meilenstein | Ziel | Status |
+|-------------|------|:------:|
+| **M0 – Gerüst** | `index.html` mit Canvas, laufender Game-Loop, „Kevin" auf dem Boden. | ✅ |
+| **M1 – Bewegung & Sprung** | Schwerkraft, Springen, Welt scrollt nach links. | ✅ |
+| **M2 – Zwerge & Stomp** | Zwerge spawnen von rechts; Stomp besiegt sie, seitlicher Kontakt = Game Over. | ✅ |
+| **M3 – Wirbelsturm** | Power-Leiste füllt sich pro Kill; wirft Zwerge im Umkreis um. | ✅ |
+| **M4 – Score & Loop** | Score-Anzeige, Game-Over-Screen, Neustart, steigende Schwierigkeit. | ✅ |
+
+Seitdem dazugekommen: Münzen, Highscore, Zwerg-Typen, Hindernisse, Power-Ups,
+Bosskampf, Sound/Partikel, Pause sowie Touch-Steuerung (siehe **Features**).
 
 ## Geplante Projektstruktur
 
@@ -69,10 +72,10 @@ Kevin-vs-Dwarfs/
 └── LICENSE
 ```
 
-## Lokal ausführen (sobald Code vorhanden ist)
+## Lokal ausführen
 
-Die `index.html` direkt im Browser öffnen — oder, falls Module/Assets geladen werden,
-einen einfachen statischen Server starten:
+Die `index.html` direkt im Browser öffnen — oder einen einfachen statischen Server
+starten (z. B. zum Testen auf dem Handy im selben Netzwerk):
 
 ```bash
 # Python 3
@@ -94,7 +97,8 @@ Getestet werden u. a. Sprung/Schwerkraft, Doppelsprung, Power-Ups und Schild/i-F
 das Füllen und Auslösen des Wirbelsturms, die Zwerg-Typen, das Spawnen/Entfernen von
 Zwergen, Münzen, Hindernissen und Power-Ups, die Boss-Mechanik (HP, Unverwundbarkeit,
 Patrouille), das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
-Überlapp-Erkennung (`src/collision.js`). Aktuell **64 Tests**.
+Überlapp-Erkennung (`src/collision.js`). Ein Smoke-Test prüft zudem, dass `index.html`
+alle `src/`-Skripte korrekt einbindet. Aktuell **68 Tests**.
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).
@@ -103,10 +107,14 @@ Bei jedem Push laufen die Tests automatisch über
 
 | Taste | Aktion |
 |-------|--------|
-| `Leertaste` / `↑` / `W` / Klick | springen |
+| `Leertaste` / `↑` / `W` / Klick | springen (bzw. Spiel starten/neu starten) |
 | `Shift` / `F` | **Wirbelsturm** (wenn Power-Leiste voll) |
 | `P` / `Esc` | Pause |
 | `M` | Ton an/aus |
+
+**Touch (Handy/Tablet):** Am Spielfeld erscheinen unten zwei runde Tasten — links
+**springen**, rechts **Wirbelsturm**. Pause und Ton liegen als Buttons unter dem
+Spielfeld. Die Touch-Tasten werden nur auf Geräten ohne Maus eingeblendet.
 
 ## Lizenz
 
