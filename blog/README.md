@@ -36,3 +36,4 @@ scripts/setup-hooks.sh
 | 2026-06-15 | [Zufall, Sound und localStorage testbar machen — ohne Browser](./2026-06-15-zufall-und-browser-apis-testbar.md) |
 | 2026-06-16 | [Der Boss, der den Helden nie traf — ein Koordinaten-Denkfehler](./2026-06-16-der-boss-der-den-helden-nie-traf.md) |
 | 2026-06-16 | [Eine Aktion, viele Auslöser — ein Spiel touch-tauglich machen](./2026-06-16-eine-aktion-viele-ausloeser.md) |
+| 2026-06-17 | [Auch Content hat Regeln — Combos, Biome und Skins testbar bauen](./2026-06-17-content-features-haben-regeln.md) |

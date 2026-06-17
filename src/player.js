@@ -24,7 +24,18 @@ class Player {
     this.powerUpDurations = { doublejump: 9, shield: 7, magnet: 8 };
     this.magnetRadius = 220;
 
+    // Skin-Farben (per setSkin überschreibbar)
+    this.bodyColor = "#2e7d32";
+    this.headColor = "#ffcc99";
+
     this.reset();
+  }
+
+  /** Setzt die Farben aus einem Skin-Objekt ({ body, head }). */
+  setSkin(skin) {
+    if (!skin) return;
+    if (skin.body) this.bodyColor = skin.body;
+    if (skin.head) this.headColor = skin.head;
   }
 
   reset() {
@@ -176,10 +187,10 @@ class Player {
     if (this.whirlActive) ctx.rotate(this.spin);
 
     // Körper
-    ctx.fillStyle = "#2e7d32";
+    ctx.fillStyle = this.bodyColor;
     ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
     // Kopf
-    ctx.fillStyle = "#ffcc99";
+    ctx.fillStyle = this.headColor;
     ctx.fillRect(-this.width / 2 + 6, -this.height / 2 - 14, this.width - 12, 16);
     // Augen (nur ohne Wirbel sinnvoll sichtbar)
     ctx.fillStyle = "#222";

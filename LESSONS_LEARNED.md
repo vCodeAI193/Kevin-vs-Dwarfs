@@ -214,6 +214,31 @@ Unit-Tests per Definition nicht sehen.
 
 ---
 
+### 2026-06-17 — Tiefe statt Breite: drei Features, die sich Daten teilen
+
+**Situation:** Das Spiel war funktional fertig. Jetzt ging es um Wiederspielwert:
+Combo-System, Biome und freischaltbare Skins.
+
+**Problem / Fehler:** Diese drei Features klingen unabhängig – tatsächlich hängen
+sie aber am selben Wert: Combo und Biom an der **Distanz/Score**, die Skins am
+**Highscore**. Die Versuchung ist, jede neue Mechanik direkt im großen `game.js`-Loop
+zu verdrahten. Dann wächst die zentrale Datei weiter, und die Logik („ab welcher
+Distanz welches Biom?", „ab welchem Score welcher Skin?") ist nicht mehr isoliert
+testbar.
+
+**Lösung:** Konsequent dem etablierten Muster gefolgt – pro Feature ein kleines,
+reines Modul: `combo.js` (Zähler + Multiplikator + Zeitfenster), `biomes.js` (eine
+pure Funktion `getBiome(distance)`) und `skins.js` (`unlockedSkins(bestScore)`,
+`nextUnlockedSkin(...)`). `game.js` ruft nur auf und zeichnet. Jede Frage – „welches
+Biom bei 4000?", „welcher Skin ab 3000 Punkten?" – ist damit ein Einzeiler-Test, ganz
+ohne Spiel zu starten. 18 neue Tests, alle grün.
+
+**Lektion:** Auch reine „Content"-Features (Biome, Skins) haben eine **Regel** im
+Kern – und Regeln gehören in pure Funktionen, nicht in den Render-Loop. Das hält die
+zentrale Datei stabil und macht jede Balance-Entscheidung testbar und nachjustierbar.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.

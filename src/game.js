@@ -15,6 +15,7 @@
   const obstacles = new ObstacleManager(W, GROUND_Y);
   const powerups = new PowerUpManager(W, GROUND_Y);
   const particles = new ParticleSystem();
+  const combo = new Combo();
   const sound = new SoundFX();
   const storage = typeof localStorage !== "undefined" ? localStorage : null;
 
@@ -28,11 +29,16 @@
   let kills = 0;
   let coinsCollected = 0;
   let bossBonus = 0;
+  let comboBonus = 0;
   let distance = 0;
   let worldSpeed = 4;
   let elapsed = 0; // Sekunden seit Spielstart (für Schwierigkeit)
   let bgOffset = 0;
   let highscore = loadHighscore(storage);
+
+  // Skin laden und auf Kevin anwenden
+  let currentSkinId = loadSkinId(storage);
+  player.setSkin(getSkinById(currentSkinId));
 
   // ---- Eingabe ----
   const jumpKeys = ["Space", "ArrowUp", "KeyW"];
@@ -82,6 +88,16 @@
     if (btn) btn.textContent = sound.muted ? "🔇 Ton" : "🔊 Ton";
   }
 
+  // Schaltet zum nächsten freigeschalteten Skin (nach Highscore) und merkt ihn
+  function cycleSkin() {
+    const next = nextUnlockedSkin(currentSkinId, highscore);
+    currentSkinId = next.id;
+    player.setSkin(next);
+    saveSkinId(storage, currentSkinId);
+    const btn = document.getElementById("btn-skin");
+    if (btn) btn.textContent = "🎨 " + next.name;
+  }
+
   canvas.addEventListener("pointerdown", primaryAction);
 
   // Bildschirm-Buttons (Touch & Maus). pointerdown für direkte Reaktion auf Touch.
@@ -97,6 +113,12 @@
   bindButton("btn-whirl", whirlwindAction);
   bindButton("btn-pause", togglePause);
   bindButton("btn-sound", toggleSound);
+  bindButton("btn-skin", cycleSkin);
+  // Skin-Button-Label initialisieren
+  {
+    const btn = document.getElementById("btn-skin");
+    if (btn) btn.textContent = "🎨 " + getSkinById(currentSkinId).name;
+  }
 
   function startGame() {
     state = "playing";
@@ -104,6 +126,7 @@
     kills = 0;
     coinsCollected = 0;
     bossBonus = 0;
+    comboBonus = 0;
     distance = 0;
     worldSpeed = 4;
     elapsed = 0;
@@ -112,6 +135,7 @@
     coins.reset();
     obstacles.reset();
     powerups.reset();
+    combo.reset();
     particles.reset();
     boss = null;
     nextBossDistance = BOSS_INTERVAL;
@@ -166,10 +190,20 @@
     d.alive = false;
     kills++;
     player.addKillPower();
+    registerComboKill(d.x + d.width / 2, d.y);
     particles.emit(d.x + d.width / 2, d.y + d.height / 2, 12, {
       color: "#d8a", speed: 200, life: 0.45, size: 4,
     });
     sound.stomp();
+  }
+
+  // Erhöht die Combo und schreibt den Multiplikator-Bonus gut (Basis 50 pro Kill)
+  function registerComboKill(x, y) {
+    const mult = combo.add();
+    if (mult > 1) {
+      comboBonus += 50 * (mult - 1);
+      particles.emit(x, y, 6, { color: "#ffd84d", speed: 160, life: 0.4, size: 3 });
+    }
   }
 
   function handleDwarfCollisions() {
@@ -278,6 +312,7 @@
     if (isStomp(player, boss) || player.whirlActive) {
       if (boss.hit()) {
         player.addKillPower();
+        registerComboKill(player.x + player.width / 2, player.y);
         particles.emit(player.x + player.width / 2, player.y + player.height, 10, {
           color: "#d8a", speed: 180, life: 0.4, size: 4,
         });
@@ -335,6 +370,7 @@
     powerups.update(dt, worldSpeed);
     particles.update(dt);
     applyMagnet(dt);
+    combo.update(dt);
 
     if (boss) {
       boss.update(dt, worldSpeed);
@@ -351,15 +387,35 @@
     handlePowerUpCollisions();
 
     score =
-      Math.floor(distance) + kills * 50 + coinsCollected * COIN_VALUE + bossBonus;
+      Math.floor(distance) +
+      kills * 50 +
+      coinsCollected * COIN_VALUE +
+      bossBonus +
+      comboBonus;
   }
 
   // ---- Zeichnen ----
   function drawBackground() {
-    ctx.fillStyle = "#87b7e8";
+    const biome = getBiome(distance);
+
+    // Himmel
+    ctx.fillStyle = biome.sky;
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = "#6fae6f";
+    // hintere Parallax-Schicht (langsamer, dunkler)
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = biome.hill;
+    for (let i = -1; i < 4; i++) {
+      const x = i * 320 - (bgOffset * 0.25) % 320;
+      ctx.beginPath();
+      ctx.arc(x + 160, GROUND_Y, 200, Math.PI, 0);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // vordere Parallax-Hügel
+    ctx.fillStyle = biome.hill;
     for (let i = -1; i < 4; i++) {
       const x = i * 280 - bgOffset * 0.5;
       ctx.beginPath();
@@ -367,9 +423,10 @@
       ctx.fill();
     }
 
-    ctx.fillStyle = "#5a3a1a";
+    // Boden
+    ctx.fillStyle = biome.ground;
     ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-    ctx.fillStyle = "#3f7d3f";
+    ctx.fillStyle = biome.grass;
     ctx.fillRect(0, GROUND_Y, W, 10);
   }
 
@@ -381,6 +438,17 @@
     ctx.font = "14px system-ui, sans-serif";
     ctx.fillText("Best: " + highscore, 16, 48);
     ctx.fillText("Zwerge: " + kills + "   Münzen: " + coinsCollected, 16, 66);
+    ctx.fillText("Biom: " + getBiome(distance).name, 16, 84);
+
+    // Combo-Anzeige (nur ab 2x)
+    if (combo.active) {
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ff9b3d";
+      ctx.font = "bold 26px system-ui, sans-serif";
+      ctx.fillText("COMBO x" + combo.multiplier, W / 2, 92);
+      ctx.restore();
+    }
 
     // Power-Leiste
     const barW = 180;

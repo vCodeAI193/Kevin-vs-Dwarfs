@@ -22,6 +22,9 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 - ⚡ **Power-Ups:** Doppelsprung, Schild (fängt einen tödlichen Treffer ab) und Magnet
 - 👹 **Bosskampf:** der Zwergenkönig taucht in Distanz-Abständen auf, hält mehrere
   Treffer aus und bringt einen Score-Bonus
+- 🔥 **Combo-System:** schnelle Kills hintereinander geben einen Score-Multiplikator (bis 8×)
+- 🌄 **Biome:** Umgebung & Parallax wechseln mit der Distanz (Wiese → Höhle → Lava → Eis)
+- 🎨 **Skins für Kevin:** per Highscore freischaltbar und auswählbar (gespeichert)
 - 🏆 **Highscore** dauerhaft gespeichert (localStorage)
 - 🔊 **Sound** (synthetisch über Web Audio, ohne Dateien) & ✨ Partikel-Effekte
 - ⏸️ **Pause** (P/Esc) und Ton an/aus (M)
@@ -61,6 +64,9 @@ Kevin-vs-Dwarfs/
 │   ├── obstacles.js    # Hindernisse (Felsen)
 │   ├── powerups.js     # Power-Ups: Doppelsprung, Schild, Magnet
 │   ├── boss.js         # Bosskampf (Zwergenkönig)
+│   ├── combo.js        # Combo-System (Score-Multiplikator)
+│   ├── biomes.js       # Biome & Hintergrundfarben nach Distanz
+│   ├── skins.js        # freischaltbare Kevin-Skins
 │   ├── collision.js    # reine Kollisions-Logik (testbar)
 │   ├── particles.js    # Partikel-Effekte
 │   ├── audio.js        # synthetische Soundeffekte (Web Audio)
@@ -96,9 +102,10 @@ npm test      # oder: node --test
 Getestet werden u. a. Sprung/Schwerkraft, Doppelsprung, Power-Ups und Schild/i-Frames,
 das Füllen und Auslösen des Wirbelsturms, die Zwerg-Typen, das Spawnen/Entfernen von
 Zwergen, Münzen, Hindernissen und Power-Ups, die Boss-Mechanik (HP, Unverwundbarkeit,
-Patrouille), das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
-Überlapp-Erkennung (`src/collision.js`). Ein Smoke-Test prüft zudem, dass `index.html`
-alle `src/`-Skripte korrekt einbindet. Aktuell **68 Tests**.
+Patrouille), das Combo-System, die Biom-Auswahl, die Skin-Freischaltung, das
+Partikelsystem, die Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung
+(`src/collision.js`). Ein Smoke-Test prüft zudem, dass `index.html` alle
+`src/`-Skripte korrekt einbindet. Aktuell **86 Tests**.
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).
@@ -113,8 +120,9 @@ Bei jedem Push laufen die Tests automatisch über
 | `M` | Ton an/aus |
 
 **Touch (Handy/Tablet):** Am Spielfeld erscheinen unten zwei runde Tasten — links
-**springen**, rechts **Wirbelsturm**. Pause und Ton liegen als Buttons unter dem
-Spielfeld. Die Touch-Tasten werden nur auf Geräten ohne Maus eingeblendet.
+**springen**, rechts **Wirbelsturm**. Pause, Ton und **Skin-Wechsel** liegen als
+Buttons unter dem Spielfeld. Die Touch-Tasten werden nur auf Geräten ohne Maus
+eingeblendet.
 
 ## Lizenz
 
