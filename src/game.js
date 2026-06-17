@@ -36,6 +36,14 @@
   let bgOffset = 0;
   let highscore = loadHighscore(storage);
 
+  // Dauerhafte Statistiken & Erfolge
+  let stats = loadStats(storage);
+  let unlockedAchievements = loadUnlocked(storage);
+  let runMaxCombo = 0; // höchste Combo im aktuellen Lauf
+  let bossesThisRun = 0;
+  let lastRun = null; // Zusammenfassung des letzten Laufs (für Game-Over-Screen)
+  let lastNewAchievements = []; // im letzten Lauf neu freigeschaltete Erfolge
+
   // Skin laden und auf Kevin anwenden
   let currentSkinId = loadSkinId(storage);
   player.setSkin(getSkinById(currentSkinId));
@@ -136,6 +144,8 @@
     obstacles.reset();
     powerups.reset();
     combo.reset();
+    runMaxCombo = 0;
+    bossesThisRun = 0;
     particles.reset();
     boss = null;
     nextBossDistance = BOSS_INTERVAL;
@@ -301,6 +311,7 @@
     });
     sound.whirlwind();
     bossBonus += 500; // fließt über die Score-Formel in den Gesamtwert
+    bossesThisRun++;
     boss = null;
     nextBossDistance += BOSS_INTERVAL;
   }
@@ -346,6 +357,24 @@
     state = "gameover";
     sound.gameover();
     highscore = saveHighscore(storage, score);
+
+    // Lauf zusammenfassen, Statistiken & Erfolge aktualisieren
+    lastRun = {
+      distance: Math.floor(distance),
+      kills,
+      coins: coinsCollected,
+      bosses: bossesThisRun,
+      maxCombo: runMaxCombo,
+      score,
+    };
+    stats = mergeRun(stats, lastRun);
+    saveStats(storage, stats);
+
+    lastNewAchievements = newlyUnlocked(unlockedAchievements, stats);
+    if (lastNewAchievements.length > 0) {
+      unlockedAchievements = unlockedAchievements.concat(lastNewAchievements);
+      saveUnlocked(storage, unlockedAchievements);
+    }
   }
 
   // ---- Update ----
@@ -371,6 +400,7 @@
     particles.update(dt);
     applyMagnet(dt);
     combo.update(dt);
+    runMaxCombo = Math.max(runMaxCombo, combo.multiplier);
 
     if (boss) {
       boss.update(dt, worldSpeed);
@@ -509,16 +539,72 @@
 
     drawHUD();
     if (state === "ready") {
-      drawCenterText("Kevin gegen die Zwerge", "Leertaste / Klick zum Starten");
+      drawReady();
     } else if (state === "paused") {
       drawCenterText("Pause", "P oder Esc zum Weiterspielen");
     } else if (state === "gameover") {
-      const sub =
-        score >= highscore && score > 0
-          ? "Neuer Rekord! Leertaste für neuen Versuch"
-          : "Leertaste / Klick für neuen Versuch";
-      drawCenterText("Game Over – Score: " + score, sub);
+      drawGameOver();
     }
+  }
+
+  function dimOverlay() {
+    ctx.fillStyle = "rgba(27,16,51,0.6)";
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawReady() {
+    drawCenterText("Kevin gegen die Zwerge", "Leertaste / Klick zum Starten");
+    // Lifetime-Statistiken dezent am unteren Rand
+    if (stats.runs > 0) {
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.font = "13px system-ui, sans-serif";
+      ctx.fillText(
+        `Läufe: ${stats.runs}  ·  Zwerge: ${stats.totalKills}  ·  ` +
+          `Münzen: ${stats.totalCoins}  ·  Bosse: ${stats.bossesDefeated}`,
+        W / 2, H - 24
+      );
+    }
+  }
+
+  function drawGameOver() {
+    dimOverlay();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 34px system-ui, sans-serif";
+    const rekord = score >= highscore && score > 0;
+    ctx.fillText((rekord ? "🏆 Neuer Rekord! " : "Game Over") , W / 2, 70);
+
+    // Lauf-Zusammenfassung
+    ctx.font = "16px system-ui, sans-serif";
+    const r = lastRun || { distance: 0, kills: 0, coins: 0, bosses: 0, maxCombo: 0 };
+    const lines = [
+      `Score: ${score}` + (rekord ? "" : `   (Best: ${highscore})`),
+      `Distanz: ${r.distance}   Zwerge: ${r.kills}   Münzen: ${r.coins}`,
+      `Bosse: ${r.bosses}   beste Combo: ${r.maxCombo}×`,
+    ];
+    lines.forEach((line, i) => ctx.fillText(line, W / 2, 110 + i * 24));
+
+    // Neu freigeschaltete Erfolge
+    let y = 110 + lines.length * 24 + 12;
+    if (lastNewAchievements.length > 0) {
+      ctx.fillStyle = "#ffd84d";
+      ctx.font = "bold 16px system-ui, sans-serif";
+      ctx.fillText("🎉 Neuer Erfolg!", W / 2, y);
+      y += 22;
+      ctx.font = "14px system-ui, sans-serif";
+      for (const id of lastNewAchievements) {
+        const a = getAchievement(id);
+        if (a) {
+          ctx.fillText(`${a.name} – ${a.desc}`, W / 2, y);
+          y += 20;
+        }
+      }
+    }
+
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "16px system-ui, sans-serif";
+    ctx.fillText("Leertaste / Klick für neuen Versuch", W / 2, H - 22);
   }
 
   // ---- Loop ----

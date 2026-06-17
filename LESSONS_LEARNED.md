@@ -239,6 +239,30 @@ zentrale Datei stabil und macht jede Balance-Entscheidung testbar und nachjustie
 
 ---
 
+### 2026-06-17 — Erfolge ohne Wenn-dann-Wirrwarr: Daten statt Code
+
+**Situation:** Für mehr Langzeit-Motivation kamen dauerhafte Statistiken und Erfolge
+(Achievements) dazu: „100 Zwerge besiegt", „Combo 8×", „5 Bosse" usw.
+
+**Problem / Fehler:** Achievements verleiten zu Code wie „immer wenn ein Zwerg stirbt,
+prüfe, ob es der 100. war, und schalte dann …". Das streut die Erfolgs-Bedingungen
+quer durch den Spielcode, ist schwer testbar und vergisst leicht Fälle (was, wenn man
+über mehrere Läufe hinweg 100 erreicht?).
+
+**Lösung:** Strikte Trennung. Eine reine Statistik-Schicht (`stats.js`) verrechnet am
+Ende jedes Laufs **ein** Ergebnisobjekt in die Gesamtwerte (`mergeRun`). Die Erfolge
+(`achievements.js`) sind nur **Daten mit einer Bedingung** über diesen Statistiken:
+`{ id, name, desc, test: (s) => s.totalKills >= 100 }`. Eine Funktion
+`newlyUnlocked(prev, stats)` liefert genau die neu erfüllten Erfolge. Der Spielcode
+ruft das an einer einzigen Stelle (Game Over) auf – keine verstreuten Checks.
+
+**Lektion:** Erfolge sind kein Ablauf, sondern eine **Abfrage über dem Zustand**. Wer
+sie als Daten + Prädikat über einer sauberen Statistik-Schicht modelliert, kann jede
+Bedingung als Einzeiler testen und neue Erfolge hinzufügen, ohne den Spielcode
+anzufassen. „Verrechnen am Ende des Laufs" schlägt „mitzählen an zehn Stellen".
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
