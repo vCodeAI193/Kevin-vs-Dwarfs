@@ -1,15 +1,22 @@
+// Projectile im Browser global, in Node via require
+const _Projectile =
+  typeof require !== "undefined" ? require("./projectile.js").Projectile
+  : typeof window !== "undefined" ? window.Projectile
+  : null;
+
 /**
- * Der Zwergenkönig – ein Mini-Boss, der in festen Distanz-Abständen auftaucht.
+ * Der Zwergenkönig – ein mehrphasiger Boss, der in festen Distanz-Abständen auftaucht.
  * Er hält mehrere Treffer aus und muss von oben gestompt (oder vom Wirbelsturm
  * getroffen) werden. Seitlicher Kontakt ist tödlich (außer mit Schild).
  *
  * Ablauf: Boss läuft von rechts herein und patrouilliert dann horizontal hin und
  * her – auch durch Kevins feste Position. Steht Kevin am Boden, wenn der Boss
  * heranrückt, muss er springen; im Fallen landet er auf dem Kopf = Treffer.
- * Nach jedem Treffer ist der Boss kurz unverwundbar (blinkt).
+ * Mit sinkenden Lebenspunkten steigt das Tempo, und ab Phase 2 wirft er Hämmer,
+ * über die Kevin springen muss. Nach jedem Treffer ist der Boss kurz unverwundbar.
  */
 class Boss {
-  constructor(canvasWidth, groundY, maxHp = 3) {
+  constructor(canvasWidth, groundY, maxHp = 4) {
     this.width = 78;
     this.height = 88;
     this.groundY = groundY;
@@ -26,10 +33,24 @@ class Boss {
     this.alive = true;
     this.entering = true;
     this.hitCooldown = 0; // > 0 -> gerade unverwundbar
+    this.projectiles = [];
+    this.throwTimer = 2.4; // Sekunden bis zum nächsten Wurf
   }
 
   get vulnerable() {
     return this.hitCooldown <= 0;
+  }
+
+  /** Phase 1–3 nach verbleibenden Lebenspunkten (1 = frisch, 3 = fast besiegt). */
+  get phase() {
+    const r = this.hp / this.maxHp;
+    if (r > 0.66) return 1;
+    if (r > 0.33) return 2;
+    return 3;
+  }
+
+  get currentPatrolSpeed() {
+    return this.patrolSpeed * (1 + (this.phase - 1) * 0.4);
   }
 
   /** Fügt einen Treffer zu, sofern gerade verwundbar. Gibt true bei Treffer. */
@@ -50,8 +71,8 @@ class Boss {
         this.dir = -1;
       }
     } else {
-      // horizontal patrouillieren und an den Rändern umkehren
-      this.x += this.dir * this.patrolSpeed * dt;
+      // horizontal patrouillieren (schneller in späteren Phasen)
+      this.x += this.dir * this.currentPatrolSpeed * dt;
       if (this.x <= this.patrolMin) {
         this.x = this.patrolMin;
         this.dir = 1;
@@ -59,8 +80,25 @@ class Boss {
         this.x = this.patrolMax;
         this.dir = -1;
       }
+      this.updateThrows(dt);
     }
     if (this.hitCooldown > 0) this.hitCooldown -= dt;
+
+    for (const p of this.projectiles) p.update(dt);
+    this.projectiles = this.projectiles.filter((p) => p.alive);
+  }
+
+  /** Ab Phase 2 wirft der Boss in Intervallen einen Hammer flach nach links. */
+  updateThrows(dt) {
+    if (this.phase < 2 || !_Projectile) return;
+    this.throwTimer -= dt;
+    if (this.throwTimer <= 0) {
+      this.throwTimer = this.phase >= 3 ? 1.2 : 1.9;
+      const speed = -(280 + this.phase * 60);
+      this.projectiles.push(
+        new _Projectile(this.x, this.groundY - 24, speed)
+      );
+    }
   }
 
   draw(ctx) {
@@ -99,6 +137,9 @@ class Boss {
     ctx.fillRect(bx, by, (bw * Math.max(0, this.hp)) / this.maxHp, 8);
     ctx.strokeStyle = "#1b1033";
     ctx.strokeRect(bx, by, bw, 8);
+
+    // Geworfene Hämmer
+    for (const p of this.projectiles) p.draw(ctx);
   }
 }
 

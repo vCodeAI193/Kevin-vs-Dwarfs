@@ -22,12 +22,14 @@
   const powerups = new PowerUpManager(W, GROUND_Y, rngProxy);
   const particles = new ParticleSystem();
   const combo = new Combo();
+  const toasts = new ToastManager();
   const sound = new SoundFX();
   const storage = typeof localStorage !== "undefined" ? localStorage : null;
 
   const BOSS_INTERVAL = 1500; // Distanz zwischen Bosskämpfen
   let boss = null;
   let nextBossDistance = BOSS_INTERVAL;
+  let lastBossPhase = 0; // zur Erkennung von Phasenwechseln
 
   // Spielzustand: "ready" | "playing" | "paused" | "gameover"
   let state = "ready";
@@ -197,8 +199,10 @@
     obstacles.reset();
     powerups.reset();
     combo.reset();
+    toasts.reset();
     runMaxCombo = 0;
     bossesThisRun = 0;
+    lastBossPhase = 0;
     particles.reset();
     boss = null;
     nextBossDistance = BOSS_INTERVAL;
@@ -352,10 +356,12 @@
 
   // ---- Boss ----
   function spawnBoss() {
-    const hp = 3 + Math.floor(nextBossDistance / BOSS_INTERVAL); // wird mit der Zeit zäher
+    const hp = 4 + Math.floor(nextBossDistance / BOSS_INTERVAL); // wird mit der Zeit zäher
     boss = new Boss(W, GROUND_Y, hp);
+    lastBossPhase = 1;
     enemies.dwarves = []; // Arena freiräumen
     obstacles.obstacles = [];
+    toasts.add("⚔️ Der Zwergenkönig erscheint!", 2.5, "#c39bff");
   }
 
   function defeatBoss() {
@@ -363,14 +369,36 @@
       color: "#ffd84d", speed: 360, life: 0.8, size: 6,
     });
     sound.whirlwind();
+    toasts.add("Zwergenkönig besiegt! +500", 2.5, "#ffd84d");
     bossBonus += 500; // fließt über die Score-Formel in den Gesamtwert
     bossesThisRun++;
     boss = null;
     nextBossDistance += BOSS_INTERVAL;
   }
 
+  // Boss-Projektile (Hämmer): Berührung ist tödlich (außer Schild/i-Frames)
+  function handleBossProjectiles() {
+    if (!boss) return;
+    for (const p of boss.projectiles) {
+      if (!p.alive) continue;
+      if (rectsOverlap(player, p)) {
+        p.alive = false;
+        if (survivesFatalHit()) continue;
+        gameOver();
+        return;
+      }
+    }
+  }
+
   function handleBossCollision() {
     if (!boss || !boss.alive) return;
+
+    // Phasenwechsel ankündigen
+    if (boss.phase > lastBossPhase) {
+      lastBossPhase = boss.phase;
+      toasts.add("Phase " + boss.phase + "! Der König wird wütend", 2, "#ff9b3d");
+    }
+
     if (!rectsOverlap(player, boss)) return;
 
     if (isStomp(player, boss) || player.whirlActive) {
@@ -454,6 +482,7 @@
     coins.update(dt, worldSpeed);
     powerups.update(dt, worldSpeed);
     particles.update(dt);
+    toasts.update(dt);
     applyMagnet(dt);
     combo.update(dt);
     runMaxCombo = Math.max(runMaxCombo, combo.multiplier);
@@ -461,6 +490,7 @@
     if (boss) {
       boss.update(dt, worldSpeed);
       handleBossCollision();
+      if (state === "playing") handleBossProjectiles();
     } else {
       // Normale Gegner & Hindernisse nur außerhalb der Boss-Phase
       enemies.update(dt, worldSpeed, difficulty);
@@ -471,6 +501,7 @@
 
     handleCoinCollisions();
     handlePowerUpCollisions();
+    checkLiveAchievements();
 
     score =
       Math.floor(distance) +
@@ -478,6 +509,31 @@
       coinsCollected * COIN_VALUE +
       bossBonus +
       comboBonus;
+  }
+
+  // Erfolge schon während des Laufs prüfen (gegen den aktuellen Fortschritt) und
+  // als Toast einblenden. Der laufende Versuch wird noch nicht als "Lauf" gezählt.
+  function liveStats() {
+    return {
+      runs: stats.runs,
+      totalDistance: stats.totalDistance + Math.floor(distance),
+      totalKills: stats.totalKills + kills,
+      totalCoins: stats.totalCoins + coinsCollected,
+      bossesDefeated: stats.bossesDefeated + bossesThisRun,
+      bestCombo: Math.max(stats.bestCombo, runMaxCombo),
+      bestDistance: Math.max(stats.bestDistance, Math.floor(distance)),
+    };
+  }
+
+  function checkLiveAchievements() {
+    const fresh = newlyUnlocked(unlockedAchievements, liveStats());
+    if (fresh.length === 0) return;
+    for (const id of fresh) {
+      const a = getAchievement(id);
+      if (a) toasts.add("🏅 Erfolg: " + a.name, 3, "#ffd84d");
+    }
+    unlockedAchievements = unlockedAchievements.concat(fresh);
+    saveUnlocked(storage, unlockedAchievements);
   }
 
   // ---- Zeichnen ----
@@ -599,6 +655,7 @@
     particles.draw(ctx);
 
     drawHUD();
+    toasts.draw(ctx, W);
     if (state === "ready") {
       drawReady();
     } else if (state === "paused") {

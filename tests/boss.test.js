@@ -60,3 +60,46 @@ test("genug Treffer besiegen den Boss", () => {
   assert.equal(b.hp, 0);
   assert.equal(b.alive, false);
 });
+
+test("Phase steigt mit sinkenden Lebenspunkten", () => {
+  const b = new Boss(CANVAS_W, GROUND_Y, 6);
+  assert.equal(b.phase, 1); // 6/6
+  b.hp = 3; // 0.5
+  assert.equal(b.phase, 2);
+  b.hp = 1; // 0.16
+  assert.equal(b.phase, 3);
+});
+
+test("Patrouille-Tempo steigt mit der Phase", () => {
+  const b = new Boss(CANVAS_W, GROUND_Y, 6);
+  const speed1 = b.currentPatrolSpeed;
+  b.hp = 1;
+  assert.ok(b.currentPatrolSpeed > speed1);
+});
+
+test("in Phase 1 wirft der Boss keine Hämmer", () => {
+  const b = new Boss(CANVAS_W, GROUND_Y, 6);
+  b.entering = false;
+  b.x = b.patrolMax;
+  for (let i = 0; i < 60 * 5; i++) b.update(1 / 60, 0);
+  assert.equal(b.projectiles.length, 0);
+});
+
+test("ab Phase 2 wirft der Boss Hämmer", () => {
+  const b = new Boss(CANVAS_W, GROUND_Y, 6);
+  b.entering = false;
+  b.x = b.patrolMax;
+  b.hp = 3; // Phase 2
+  // Projektile sind kurzlebig (fliegen aus dem Bild) -> beobachten, ob je eines existiert
+  let everThrown = false;
+  let leftMoving = true;
+  for (let i = 0; i < 60 * 4; i++) {
+    b.update(1 / 60, 0);
+    if (b.projectiles.length > 0) {
+      everThrown = true;
+      if (b.projectiles[0].vx >= 0) leftMoving = false;
+    }
+  }
+  assert.ok(everThrown, "Boss sollte in Phase 2 Hämmer werfen");
+  assert.ok(leftMoving, "Hämmer fliegen nach links");
+});

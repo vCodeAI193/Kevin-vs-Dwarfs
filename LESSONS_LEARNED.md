@@ -289,6 +289,30 @@ ganze Subsysteme (hier: die Zufallsquelle) austauschen, ohne den Kern anzufassen
 
 ---
 
+### 2026-06-18 — Der grüne Test, der trotzdem log: kurzlebige Objekte richtig prüfen
+
+**Situation:** Der Boss bekam Phasen und Wurfangriffe (Hämmer). Ein Test sollte
+sicherstellen, dass er ab Phase 2 wirft.
+
+**Problem / Fehler:** Der Test lief den Boss vier Sekunden lang und prüfte am Ende
+`b.projectiles.length > 0` – und schlug fehl. Der erste Reflex: „Der Boss wirft nicht."
+Falsch. Ein kurzer Direkt-Test zeigte: `updateThrows()` erzeugt sehr wohl Projektile.
+Sie sind nur **kurzlebig** – sie fliegen aus dem Bild und werden wieder entfernt.
+Zum Zeitpunkt der Prüfung am Ende war die Liste längst wieder leer. Der Test maß einen
+Momentwert eines transienten Zustands.
+
+**Lösung:** Statt am Ende einen Schnappschuss zu nehmen, **beobachtet** der Test jetzt
+über die ganze Laufzeit: „Gab es *jemals* ein Projektil, und flog es nach links?" Ein
+`everThrown`-Flag über die Schleife fängt das transiente Ereignis zuverlässig.
+
+**Lektion:** Bei kurzlebigen Objekten (Projektile, Partikel, Toasts) prüft ein
+Momentaufnahme-Assert das Falsche. Teste das **Ereignis über die Zeit** („trat es
+auf?"), nicht den Zustand zu einem willkürlichen Zeitpunkt. Und: Wenn ein Test
+fehlschlägt, erst die Annahme mit einem 3-Zeilen-Direkttest prüfen, bevor man den
+Produktivcode verdächtigt.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -310,3 +334,5 @@ ganze Subsysteme (hier: die Zufallsquelle) austauschen, ohne den Kern anzufassen
 - **Injektion verzinst sich.** Wer früh Abhängigkeiten (Zufall, Speicher) als
   Parameter reinreicht, kann später ganze Subsysteme über einen Proxy austauschen –
   die Tages-Challenge war dadurch fast geschenkt.
+- **Kurzlebiges über die Zeit testen.** Bei Projektilen/Partikeln das *Ereignis*
+  („trat es je auf?") prüfen, nicht den Zustand zu einem willkürlichen Zeitpunkt.

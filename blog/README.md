@@ -39,3 +39,4 @@ scripts/setup-hooks.sh
 | 2026-06-17 | [Auch Content hat Regeln — Combos, Biome und Skins testbar bauen](./2026-06-17-content-features-haben-regeln.md) |
 | 2026-06-17 | [Erfolge sind Daten, kein Code — Achievements sauber modellieren](./2026-06-17-erfolge-sind-daten-keine-checks.md) |
 | 2026-06-18 | [Eine tägliche Challenge fast geschenkt — dank injiziertem Zufall](./2026-06-18-tages-challenge-fast-gratis.md) |
+| 2026-06-18 | [Der grüne Test, der trotzdem log — kurzlebige Objekte richtig prüfen](./2026-06-18-kurzlebige-objekte-testen.md) |

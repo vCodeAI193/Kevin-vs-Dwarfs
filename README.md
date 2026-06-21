@@ -20,8 +20,9 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 - 🪨 **Hindernisse** (Felsen) zum Drüberspringen
 - 🪙 **Münzen** sammeln für Punkte und etwas Extra-Power
 - ⚡ **Power-Ups:** Doppelsprung, Schild (fängt einen tödlichen Treffer ab) und Magnet
-- 👹 **Bosskampf:** der Zwergenkönig taucht in Distanz-Abständen auf, hält mehrere
-  Treffer aus und bringt einen Score-Bonus
+- 👹 **Mehrphasiger Bosskampf:** der Zwergenkönig wird mit sinkenden Lebenspunkten
+  schneller und wirft ab Phase 2 Hämmer, über die Kevin springen muss; bringt Score-Bonus
+- 🔔 **Toast-Hinweise:** kurze Einblendungen für Boss-Phasen und frisch freigeschaltete Erfolge
 - 🔥 **Combo-System:** schnelle Kills hintereinander geben einen Score-Multiplikator (bis 8×)
 - 🌄 **Biome:** Umgebung & Parallax wechseln mit der Distanz (Wiese → Höhle → Lava → Eis)
 - 🎨 **Skins für Kevin:** per Highscore freischaltbar und auswählbar (gespeichert)
@@ -67,7 +68,9 @@ Kevin-vs-Dwarfs/
 │   ├── collectibles.js # Münzen: Spawn, Einsammeln
 │   ├── obstacles.js    # Hindernisse (Felsen)
 │   ├── powerups.js     # Power-Ups: Doppelsprung, Schild, Magnet
-│   ├── boss.js         # Bosskampf (Zwergenkönig)
+│   ├── boss.js         # mehrphasiger Bosskampf (Zwergenkönig)
+│   ├── projectile.js   # Boss-Wurfgeschosse (Hämmer)
+│   ├── toast.js        # kurze Bildschirm-Hinweise (Toasts)
 │   ├── combo.js        # Combo-System (Score-Multiplikator)
 │   ├── biomes.js       # Biome & Hintergrundfarben nach Distanz
 │   ├── skins.js        # freischaltbare Kevin-Skins
@@ -109,11 +112,12 @@ npm test      # oder: node --test
 Getestet werden u. a. Sprung/Schwerkraft, Doppelsprung, Power-Ups und Schild/i-Frames,
 das Füllen und Auslösen des Wirbelsturms, die Zwerg-Typen, das Spawnen/Entfernen von
 Zwergen, Münzen, Hindernissen und Power-Ups, die Boss-Mechanik (HP, Unverwundbarkeit,
-Patrouille), das Combo-System, die Biom-Auswahl, die Skin-Freischaltung, die
-Lifetime-Statistiken und die Erfolgs-Regeln, den deterministischen Tages-Seed
-(`src/daily.js`), das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
-Überlapp-Erkennung (`src/collision.js`). Ein Smoke-Test prüft zudem, dass `index.html`
-alle `src/`-Skripte korrekt einbindet. Aktuell **107 Tests**.
+Patrouille, Phasen, Wurfangriffe), das Combo-System, die Biom-Auswahl, die
+Skin-Freischaltung, die Lifetime-Statistiken und die Erfolgs-Regeln, das Toast-System,
+den deterministischen Tages-Seed (`src/daily.js`), das Partikelsystem, die
+Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung (`src/collision.js`).
+Ein Smoke-Test prüft zudem, dass `index.html` alle `src/`-Skripte korrekt einbindet.
+Aktuell **118 Tests**.
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).
