@@ -26,6 +26,8 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 - 🌄 **Biome:** Umgebung & Parallax wechseln mit der Distanz (Wiese → Höhle → Lava → Eis)
 - 🎨 **Skins für Kevin:** per Highscore freischaltbar und auswählbar (gespeichert)
 - 📊 **Statistiken & Erfolge:** dauerhafte Lifetime-Stats und freischaltbare Achievements
+- 🏅 **Erfolge-Screen:** Übersicht aller Erfolge (frei/gesperrt) und Lifetime-Stats
+- 📅 **Tägliche Challenge:** fester Tages-Seed → identischer Parcours für alle, mit Tages-Bestmarke
 - 🧾 **Lauf-Zusammenfassung** im Game-Over-Screen (Distanz, Kills, Münzen, Bosse, beste Combo)
 - 🏆 **Highscore** dauerhaft gespeichert (localStorage)
 - 🔊 **Sound** (synthetisch über Web Audio, ohne Dateien) & ✨ Partikel-Effekte
@@ -71,6 +73,7 @@ Kevin-vs-Dwarfs/
 │   ├── skins.js        # freischaltbare Kevin-Skins
 │   ├── stats.js        # dauerhafte Lifetime-Statistiken
 │   ├── achievements.js # Erfolge & Freischalt-Regeln
+│   ├── daily.js        # Seeded-PRNG + Tages-Challenge & Tages-Bestmarke
 │   ├── collision.js    # reine Kollisions-Logik (testbar)
 │   ├── particles.js    # Partikel-Effekte
 │   ├── audio.js        # synthetische Soundeffekte (Web Audio)
@@ -107,10 +110,10 @@ Getestet werden u. a. Sprung/Schwerkraft, Doppelsprung, Power-Ups und Schild/i-F
 das Füllen und Auslösen des Wirbelsturms, die Zwerg-Typen, das Spawnen/Entfernen von
 Zwergen, Münzen, Hindernissen und Power-Ups, die Boss-Mechanik (HP, Unverwundbarkeit,
 Patrouille), das Combo-System, die Biom-Auswahl, die Skin-Freischaltung, die
-Lifetime-Statistiken und die Erfolgs-Regeln, das Partikelsystem, die
-Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung (`src/collision.js`).
-Ein Smoke-Test prüft zudem, dass `index.html` alle `src/`-Skripte korrekt einbindet.
-Aktuell **100 Tests**.
+Lifetime-Statistiken und die Erfolgs-Regeln, den deterministischen Tages-Seed
+(`src/daily.js`), das Partikelsystem, die Highscore-Persistenz sowie die Stomp- und
+Überlapp-Erkennung (`src/collision.js`). Ein Smoke-Test prüft zudem, dass `index.html`
+alle `src/`-Skripte korrekt einbindet. Aktuell **107 Tests**.
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).
@@ -123,11 +126,13 @@ Bei jedem Push laufen die Tests automatisch über
 | `Shift` / `F` | **Wirbelsturm** (wenn Power-Leiste voll) |
 | `P` / `Esc` | Pause |
 | `M` | Ton an/aus |
+| `A` | Erfolge & Statistiken |
+| `T` | Tages-Challenge an/aus |
 
 **Touch (Handy/Tablet):** Am Spielfeld erscheinen unten zwei runde Tasten — links
-**springen**, rechts **Wirbelsturm**. Pause, Ton und **Skin-Wechsel** liegen als
-Buttons unter dem Spielfeld. Die Touch-Tasten werden nur auf Geräten ohne Maus
-eingeblendet.
+**springen**, rechts **Wirbelsturm**. Pause, Ton, **Skin-Wechsel**, **Tages-Challenge**
+und **Erfolge** liegen als Buttons unter dem Spielfeld. Die Touch-Tasten werden nur
+auf Geräten ohne Maus eingeblendet.
 
 ## Lizenz
 

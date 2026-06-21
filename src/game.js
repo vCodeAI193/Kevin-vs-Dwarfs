@@ -9,11 +9,17 @@
   const H = canvas.height;
   const GROUND_Y = 330;
 
+  // Zentraler Zufall: im Normalmodus Math.random, in der Tages-Challenge ein
+  // seeded PRNG. Der Proxy erlaubt es, die Quelle pro Lauf umzuschalten, ohne die
+  // Manager neu zu erzeugen.
+  let activeRng = Math.random;
+  const rngProxy = () => activeRng();
+
   const player = new Player(GROUND_Y);
-  const enemies = new EnemyManager(W, GROUND_Y);
-  const coins = new CoinManager(W, GROUND_Y);
-  const obstacles = new ObstacleManager(W, GROUND_Y);
-  const powerups = new PowerUpManager(W, GROUND_Y);
+  const enemies = new EnemyManager(W, GROUND_Y, rngProxy);
+  const coins = new CoinManager(W, GROUND_Y, rngProxy);
+  const obstacles = new ObstacleManager(W, GROUND_Y, rngProxy);
+  const powerups = new PowerUpManager(W, GROUND_Y, rngProxy);
   const particles = new ParticleSystem();
   const combo = new Combo();
   const sound = new SoundFX();
@@ -44,6 +50,10 @@
   let lastRun = null; // Zusammenfassung des letzten Laufs (für Game-Over-Screen)
   let lastNewAchievements = []; // im letzten Lauf neu freigeschaltete Erfolge
 
+  // Tägliche Challenge
+  let dailyMode = false;
+  let dailyBest = 0;
+
   // Skin laden und auf Kevin anwenden
   let currentSkinId = loadSkinId(storage);
   player.setSkin(getSkinById(currentSkinId));
@@ -61,8 +71,22 @@
       toggleSound();
       return;
     }
+    if (e.code === "KeyA") {
+      toggleAchievements();
+      return;
+    }
+    if (e.code === "KeyT") {
+      toggleDaily();
+      return;
+    }
     if (e.code === "KeyP" || e.code === "Escape") {
-      togglePause();
+      if (state === "achievements") state = "ready";
+      else togglePause();
+      return;
+    }
+
+    if (state === "achievements") {
+      if (jumpKeys.includes(e.code) || e.code === "Enter") state = "ready";
       return;
     }
 
@@ -81,8 +105,26 @@
   // Geteilte Aktionen – von Tastatur, Canvas-Tap und Bildschirm-Buttons genutzt
   function primaryAction() {
     sound.resume();
+    if (state === "achievements") {
+      state = "ready"; // Übersicht schließen
+      return;
+    }
     if (state === "playing") doJump();
-    else if (state !== "paused") startGame();
+    else if (state === "ready" || state === "gameover") startGame();
+  }
+
+  // Tages-Challenge an/aus (nur außerhalb eines Laufs)
+  function toggleDaily() {
+    if (state === "playing" || state === "paused") return;
+    dailyMode = !dailyMode;
+    const btn = document.getElementById("btn-daily");
+    if (btn) btn.textContent = dailyMode ? "📅 Täglich: An" : "📅 Täglich";
+  }
+
+  // Erfolge-/Statistik-Übersicht öffnen/schließen
+  function toggleAchievements() {
+    if (state === "playing" || state === "paused") return;
+    state = state === "achievements" ? "ready" : "achievements";
   }
 
   function whirlwindAction() {
@@ -122,6 +164,8 @@
   bindButton("btn-pause", togglePause);
   bindButton("btn-sound", toggleSound);
   bindButton("btn-skin", cycleSkin);
+  bindButton("btn-daily", toggleDaily);
+  bindButton("btn-achievements", toggleAchievements);
   // Skin-Button-Label initialisieren
   {
     const btn = document.getElementById("btn-skin");
@@ -129,6 +173,15 @@
   }
 
   function startGame() {
+    // Zufallsquelle wählen: Tages-Challenge nutzt einen festen Seed
+    if (dailyMode) {
+      const seed = todaySeed();
+      activeRng = mulberry32(seed);
+      dailyBest = loadDailyBest(storage, seed);
+    } else {
+      activeRng = Math.random;
+    }
+
     state = "playing";
     score = 0;
     kills = 0;
@@ -375,6 +428,9 @@
       unlockedAchievements = unlockedAchievements.concat(lastNewAchievements);
       saveUnlocked(storage, unlockedAchievements);
     }
+
+    // Tages-Bestmarke aktualisieren
+    if (dailyMode) dailyBest = saveDailyBest(storage, todaySeed(), score);
   }
 
   // ---- Update ----
@@ -469,6 +525,11 @@
     ctx.fillText("Best: " + highscore, 16, 48);
     ctx.fillText("Zwerge: " + kills + "   Münzen: " + coinsCollected, 16, 66);
     ctx.fillText("Biom: " + getBiome(distance).name, 16, 84);
+    if (dailyMode) {
+      ctx.fillStyle = "#ffd84d";
+      ctx.fillText("📅 Tages-Challenge", 16, 102);
+      ctx.fillStyle = "#1b1033";
+    }
 
     // Combo-Anzeige (nur ab 2x)
     if (combo.active) {
@@ -544,7 +605,46 @@
       drawCenterText("Pause", "P oder Esc zum Weiterspielen");
     } else if (state === "gameover") {
       drawGameOver();
+    } else if (state === "achievements") {
+      drawAchievementsScreen();
     }
+  }
+
+  function drawAchievementsScreen() {
+    dimOverlay();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 28px system-ui, sans-serif";
+    ctx.fillText("🏅 Erfolge & Statistiken", W / 2, 44);
+
+    // Lifetime-Statistiken
+    ctx.font = "14px system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(
+      `Läufe: ${stats.runs}   Zwerge: ${stats.totalKills}   Münzen: ${stats.totalCoins}   ` +
+        `Bosse: ${stats.bossesDefeated}   beste Combo: ${stats.bestCombo}×   Rekord-Distanz: ${stats.bestDistance}`,
+      W / 2, 70
+    );
+
+    // Erfolgsliste
+    const unlocked = evaluateAchievements(stats);
+    ctx.textAlign = "left";
+    let y = 100;
+    for (const a of ACHIEVEMENTS) {
+      const done = unlocked.includes(a.id);
+      ctx.fillStyle = done ? "#ffd84d" : "rgba(255,255,255,0.45)";
+      ctx.font = "bold 15px system-ui, sans-serif";
+      ctx.fillText((done ? "✓ " : "🔒 ") + a.name, 70, y);
+      ctx.fillStyle = done ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.4)";
+      ctx.font = "13px system-ui, sans-serif";
+      ctx.fillText(a.desc, 250, y);
+      y += 26;
+    }
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "15px system-ui, sans-serif";
+    ctx.fillText("A / Klick zum Schließen", W / 2, H - 18);
   }
 
   function dimOverlay() {
@@ -553,7 +653,22 @@
   }
 
   function drawReady() {
-    drawCenterText("Kevin gegen die Zwerge", "Leertaste / Klick zum Starten");
+    const subtitle = dailyMode
+      ? "Tages-Challenge · Leertaste / Klick zum Starten"
+      : "Leertaste / Klick zum Starten";
+    drawCenterText("Kevin gegen die Zwerge", subtitle);
+
+    if (dailyMode) {
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#ffd84d";
+      ctx.font = "14px system-ui, sans-serif";
+      const best = loadDailyBest(storage, todaySeed());
+      ctx.fillText(
+        "📅 Heutiger Parcours – Tages-Best: " + best,
+        W / 2, H / 2 + 52
+      );
+    }
+
     // Lifetime-Statistiken dezent am unteren Rand
     if (stats.runs > 0) {
       ctx.textAlign = "center";

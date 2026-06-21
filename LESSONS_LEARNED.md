@@ -263,6 +263,32 @@ anzufassen. „Verrechnen am Ende des Laufs" schlägt „mitzählen an zehn Stel
 
 ---
 
+### 2026-06-18 — Die Tages-Challenge, die fast gratis war
+
+**Situation:** Eine tägliche Challenge sollte her: Alle bekommen am selben Tag
+denselben Parcours und können ihre Tages-Bestmarke vergleichen.
+
+**Problem / Fehler:** Das klingt nach einer großen Sache – eigentlich braucht es nur
+zwei Zutaten: einen **deterministischen** Zufallsgenerator (gleicher Seed → gleiche
+Folge) und einen Weg, ihn überall dort einzusetzen, wo bisher `Math.random` lief. Die
+Falle: Hätten die Spawner `Math.random` fest verdrahtet, müsste man jetzt jeden
+einzelnen anfassen.
+
+**Lösung:** Genau hier zahlte sich eine frühere Entscheidung aus – alle Spawner
+nehmen ihren Zufall schon als Parameter entgegen (siehe Eintrag „Zufall injizieren").
+Es genügte ein **RNG-Proxy** in `game.js`: Die Manager bekommen `() => activeRng()`,
+und beim Start eines Laufs zeigt `activeRng` entweder auf `Math.random` oder – im
+Tages-Modus – auf `mulberry32(todaySeed())`. Kein Manager musste geändert werden. Der
+PRNG (`mulberry32`, ~6 Zeilen) und der Tages-Seed (`JJJJMMTT` aus dem UTC-Datum) sind
+beide pur und damit direkt testbar: „gleicher Seed → gleiche Folge", „Werte in [0,1)".
+
+**Lektion:** Gute frühe Entscheidungen verzinsen sich. Weil Zufall von Anfang an
+injizierbar war, wurde aus einem vermeintlich großen Feature ein kleiner Proxy plus
+ein winziges, vollständig getestetes Modul. Wer Abhängigkeiten injiziert, kann später
+ganze Subsysteme (hier: die Zufallsquelle) austauschen, ohne den Kern anzufassen.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -281,3 +307,6 @@ anzufassen. „Verrechnen am Ende des Laufs" schlägt „mitzählen an zehn Stel
   Logik nie pro Eingabequelle kopieren.
 - **Verdrahtung smoke-testen.** Ein Test über die `index.html` fängt vergessene
   `<script>`-Tags, die Unit-Tests nie bemerken.
+- **Injektion verzinst sich.** Wer früh Abhängigkeiten (Zufall, Speicher) als
+  Parameter reinreicht, kann später ganze Subsysteme über einen Proxy austauschen –
+  die Tages-Challenge war dadurch fast geschenkt.
