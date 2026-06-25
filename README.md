@@ -4,14 +4,26 @@ Ein rasantes 2D-Jump-&-Run für den Browser. Kevin rennt endlos von links nach r
 besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste den
 **Wirbelsturm**, der alle umliegenden Zwerge für einige Sekunden umwirft.
 
-➡️ **Spielkonzept & Designvision:** siehe [`VISION.md`](./VISION.md)
-➡️ **Lessons Learned (Entwicklungs-Logbuch / Blog-Material):** siehe [`LESSONS_LEARNED.md`](./LESSONS_LEARNED.md)
-➡️ **Blog (ausformulierte Artikel zur Entwicklung):** siehe [`blog/`](./blog/)
-
 > **Status:** Spielbarer Prototyp. Die Meilensteine M0–M4 sind umgesetzt und um
 > mehrere Features erweitert.
 
+## Dokumentation
+
+| Datei | Inhalt |
+|-------|--------|
+| [`VISION.md`](./VISION.md) | Produktvision, Ziel & Nordstern |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Aufbau, Datenfluss, Muster, „Wie füge ich X hinzu" |
+| [`docs/REQUIREMENTS.md`](./docs/REQUIREMENTS.md) | Funktionale & nicht-funktionale Anforderungen |
+| [`docs/FEATURES.md`](./docs/FEATURES.md) | Vollständige Feature-Inventur (Quelle der Wahrheit) |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Mitarbeit: lokal starten, Tests, Konventionen |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Chronologie „was wurde getan" |
+| [`CLAUDE.md`](./CLAUDE.md) | Schneller Einstieg für KI/neue Entwickler |
+| [`LESSONS_LEARNED.md`](./LESSONS_LEARNED.md) · [`blog/`](./blog/) | Entwicklungs-Logbuch & Artikel |
+
 ## Features
+
+> Vollständige, gepflegte Liste mit Status: **[`docs/FEATURES.md`](./docs/FEATURES.md)**.
+> Hier nur die Highlights:
 
 - 🏃 Endlos-Lauf nach rechts mit Springen, ansteigender Schwierigkeit
 - 🦶 Zwerge per **Stomp** besiegen; seitlicher Kontakt = Game Over
