@@ -1,15 +1,19 @@
-// SpawnManager im Browser global, in Node via require
+// SpawnManager & CONFIG im Browser global, in Node via require
 const SpawnManager =
   typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
   : typeof window !== "undefined" ? window.SpawnManager
   : null;
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
 
 /**
  * Einsammelbare Münzen. Bringen Punkte und füllen die Wirbelsturm-Leiste ein wenig.
  * Spawnen in kleinen Reihen, mal am Boden, mal auf Sprunghöhe.
  */
-const COIN_VALUE = 25;
-const COIN_POWER = 5;
+const COIN_VALUE = CONFIG.coin.value;
+const COIN_POWER = CONFIG.coin.power;
 
 class Coin {
   constructor(x, y) {
@@ -47,7 +51,7 @@ class Coin {
 class CoinManager extends SpawnManager {
   reset() {
     super.reset();
-    this.cooldown = 1.8; // Sekunden zwischen Münz-Reihen
+    this.cooldown = CONFIG.spawn.coinCooldown; // Sekunden zwischen Münz-Reihen
   }
 
   // öffentlicher Name: coins (zeigt auf die geteilte items-Liste)

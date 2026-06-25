@@ -1,8 +1,12 @@
-// SpawnManager im Browser global, in Node via require
+// SpawnManager & CONFIG im Browser global, in Node via require
 const SpawnManager =
   typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
   : typeof window !== "undefined" ? window.SpawnManager
   : null;
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
 
 /**
  * Zwerg-Typen. Jeder Typ hat eigene Maße, Tempo, Optik und ggf. eine Panzerung.
@@ -106,7 +110,7 @@ function pickDwarfType(difficulty, rng = Math.random) {
 class EnemyManager extends SpawnManager {
   reset() {
     super.reset();
-    this.cooldown = 1.2; // Sekunden bis zum nächsten Spawn
+    this.cooldown = CONFIG.spawn.enemyCooldown; // Sekunden bis zum nächsten Spawn
   }
 
   // öffentlicher Name: dwarves (zeigt auf die geteilte items-Liste)

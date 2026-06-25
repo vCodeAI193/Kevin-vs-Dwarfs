@@ -1,8 +1,12 @@
-// SpawnManager im Browser global, in Node via require
+// SpawnManager & CONFIG im Browser global, in Node via require
 const SpawnManager =
   typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
   : typeof window !== "undefined" ? window.SpawnManager
   : null;
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
 
 /**
  * Einsammelbare Power-Ups, die zeitlich begrenzte Fähigkeiten verleihen:
@@ -64,7 +68,7 @@ function pickPowerUpType(rng = Math.random) {
 class PowerUpManager extends SpawnManager {
   reset() {
     super.reset();
-    this.cooldown = 11; // Power-Ups sind selten
+    this.cooldown = CONFIG.spawn.powerupCooldown; // Power-Ups sind selten
   }
 
   spawn() {

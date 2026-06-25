@@ -3,7 +3,13 @@
  * zurückgelegten Distanz und wiederholen sich danach in einer Schleife – so fühlt
  * sich der endlose Lauf abwechslungsreich an.
  */
-const BIOME_LENGTH = 2000; // Distanz pro Biom
+// CONFIG im Browser global, in Node via require
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
+
+const BIOME_LENGTH = CONFIG.biomeLength; // Distanz pro Biom
 
 const BIOMES = [
   { name: "Wiese", sky: "#87b7e8", hill: "#6fae6f", ground: "#5a3a1a", grass: "#3f7d3f" },

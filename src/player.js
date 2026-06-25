@@ -1,3 +1,9 @@
+// CONFIG im Browser global, in Node via require
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
+
 /**
  * Kevin – der Held. Bleibt am festen Bildschirm-X stehen, während die Welt scrollt.
  * Kann springen (Schwerkraft) und – bei voller Power-Leiste – den Wirbelsturm auslösen.
@@ -21,8 +27,12 @@ class Player {
     this.whirlStunTime = 3.0; // Sekunden, die Zwerge umgeworfen bleiben
 
     // Power-Up-Dauern (Sekunden)
-    this.powerUpDurations = { doublejump: 9, shield: 7, magnet: 8 };
-    this.magnetRadius = 220;
+    this.powerUpDurations = {
+      doublejump: CONFIG.powerUp.doublejump,
+      shield: CONFIG.powerUp.shield,
+      magnet: CONFIG.powerUp.magnet,
+    };
+    this.magnetRadius = CONFIG.powerUp.magnetRadius;
 
     // Skin-Farben (per setSkin überschreibbar)
     this.bodyColor = "#2e7d32";

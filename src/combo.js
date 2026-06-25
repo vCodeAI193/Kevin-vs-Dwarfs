@@ -3,8 +3,14 @@
  * Zeitfensters), steigt der Combo-Zähler und damit ein Score-Multiplikator. Lässt
  * das Zeitfenster verstreichen, ohne dass etwas besiegt wird, fällt die Combo zurück.
  */
-const COMBO_WINDOW = 2.5; // Sekunden bis die Combo verfällt
-const COMBO_MAX_MULTIPLIER = 8;
+// CONFIG im Browser global, in Node via require
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
+
+const COMBO_WINDOW = CONFIG.combo.window; // Sekunden bis die Combo verfällt
+const COMBO_MAX_MULTIPLIER = CONFIG.combo.maxMultiplier;
 
 class Combo {
   constructor(window = COMBO_WINDOW) {

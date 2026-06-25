@@ -1,8 +1,12 @@
-// SpawnManager im Browser global, in Node via require
+// SpawnManager & CONFIG im Browser global, in Node via require
 const SpawnManager =
   typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
   : typeof window !== "undefined" ? window.SpawnManager
   : null;
+const CONFIG =
+  typeof require !== "undefined" ? require("./config.js").CONFIG
+  : typeof window !== "undefined" ? window.CONFIG
+  : {};
 
 /**
  * Hindernisse (Felsen) am Boden. Sie sind NICHT besiegbar – Kevin muss darüber
@@ -39,7 +43,7 @@ class Obstacle {
 class ObstacleManager extends SpawnManager {
   reset() {
     super.reset();
-    this.cooldown = 2.6; // Grund-Abstand zwischen Felsen
+    this.cooldown = CONFIG.spawn.obstacleCooldown; // Grund-Abstand zwischen Felsen
   }
 
   // öffentlicher Name: obstacles (zeigt auf die geteilte items-Liste)
