@@ -1,3 +1,9 @@
+// SpawnManager im Browser global, in Node via require
+const SpawnManager =
+  typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
+  : typeof window !== "undefined" ? window.SpawnManager
+  : null;
+
 /**
  * Hindernisse (Felsen) am Boden. Sie sind NICHT besiegbar – Kevin muss darüber
  * springen. Jede Berührung beendet den Lauf.
@@ -30,33 +36,26 @@ class Obstacle {
   }
 }
 
-class ObstacleManager {
-  constructor(canvasWidth, groundY, rng = Math.random) {
-    this.canvasWidth = canvasWidth;
-    this.groundY = groundY;
-    this.rng = rng;
-    this.reset();
-  }
-
+class ObstacleManager extends SpawnManager {
   reset() {
-    this.obstacles = [];
-    this.timer = 0;
+    super.reset();
     this.cooldown = 2.6; // Grund-Abstand zwischen Felsen
   }
 
-  update(dt, worldSpeed, difficulty) {
-    this.timer += dt;
-    const interval = Math.max(1.2, this.cooldown - difficulty * 0.1);
-    if (this.timer >= interval) {
-      this.timer = 0;
-      this.obstacles.push(new Obstacle(this.canvasWidth + 20, this.groundY));
-    }
-    for (const o of this.obstacles) o.update(dt, worldSpeed);
-    this.obstacles = this.obstacles.filter((o) => o.x + o.width > -10);
+  // öffentlicher Name: obstacles (zeigt auf die geteilte items-Liste)
+  get obstacles() {
+    return this.items;
+  }
+  set obstacles(v) {
+    this.items = v;
   }
 
-  draw(ctx) {
-    for (const o of this.obstacles) o.draw(ctx);
+  interval(difficulty) {
+    return Math.max(1.2, this.cooldown - difficulty * 0.1);
+  }
+
+  spawn() {
+    this.items.push(new Obstacle(this.canvasWidth + 20, this.groundY));
   }
 }
 

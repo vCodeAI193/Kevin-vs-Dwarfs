@@ -1,3 +1,9 @@
+// SpawnManager im Browser global, in Node via require
+const SpawnManager =
+  typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
+  : typeof window !== "undefined" ? window.SpawnManager
+  : null;
+
 /**
  * Einsammelbare Münzen. Bringen Punkte und füllen die Wirbelsturm-Leiste ein wenig.
  * Spawnen in kleinen Reihen, mal am Boden, mal auf Sprunghöhe.
@@ -38,43 +44,33 @@ class Coin {
   }
 }
 
-class CoinManager {
-  constructor(canvasWidth, groundY, rng = Math.random) {
-    this.canvasWidth = canvasWidth;
-    this.groundY = groundY;
-    this.rng = rng;
-    this.reset();
-  }
-
+class CoinManager extends SpawnManager {
   reset() {
-    this.coins = [];
-    this.timer = 0;
+    super.reset();
     this.cooldown = 1.8; // Sekunden zwischen Münz-Reihen
   }
 
-  update(dt, worldSpeed) {
-    this.timer += dt;
-    if (this.timer >= this.cooldown) {
-      this.timer = 0;
-      this.spawnRow();
-    }
-    for (const c of this.coins) c.update(dt, worldSpeed);
-    this.coins = this.coins.filter((c) => !c.collected && c.x + c.width > -10);
+  // öffentlicher Name: coins (zeigt auf die geteilte items-Liste)
+  get coins() {
+    return this.items;
+  }
+  set coins(v) {
+    this.items = v;
   }
 
-  spawnRow() {
+  spawn() {
     const count = 3;
     const gap = 26;
     // Mal auf Bodenhöhe, mal auf Sprunghöhe
     const high = this.rng() < 0.5;
     const baseY = high ? this.groundY - 120 : this.groundY - 40;
     for (let i = 0; i < count; i++) {
-      this.coins.push(new Coin(this.canvasWidth + 20 + i * gap, baseY));
+      this.items.push(new Coin(this.canvasWidth + 20 + i * gap, baseY));
     }
   }
 
-  draw(ctx) {
-    for (const c of this.coins) c.draw(ctx);
+  keep(c) {
+    return !c.collected && c.x + c.width > -10;
   }
 }
 

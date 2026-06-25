@@ -1,3 +1,9 @@
+// SpawnManager im Browser global, in Node via require
+const SpawnManager =
+  typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
+  : typeof window !== "undefined" ? window.SpawnManager
+  : null;
+
 /**
  * Zwerg-Typen. Jeder Typ hat eigene Maße, Tempo, Optik und ggf. eine Panzerung.
  * - normal:  Standard-Zwerg, per Stomp besiegbar.
@@ -97,37 +103,32 @@ function pickDwarfType(difficulty, rng = Math.random) {
  * Verwaltet das Spawnen und Aktualisieren aller Zwerge. Die Spawn-Rate steigt mit
  * der Zeit, damit es endlos schwerer wird.
  */
-class EnemyManager {
-  constructor(canvasWidth, groundY, rng = Math.random) {
-    this.canvasWidth = canvasWidth;
-    this.groundY = groundY;
-    this.rng = rng;
-    this.reset();
-  }
-
+class EnemyManager extends SpawnManager {
   reset() {
-    this.dwarves = [];
-    this.spawnCooldown = 1.2; // Sekunden bis zum nächsten Spawn
-    this.timer = 0;
+    super.reset();
+    this.cooldown = 1.2; // Sekunden bis zum nächsten Spawn
   }
 
-  update(dt, worldSpeed, difficulty) {
-    // Spawn-Logik – mit steigender Schwierigkeit kürzere Abstände
-    this.timer += dt;
-    const interval = Math.max(0.55, this.spawnCooldown - difficulty * 0.08);
-    if (this.timer >= interval) {
-      this.timer = 0;
-      const type = pickDwarfType(difficulty, this.rng);
-      this.dwarves.push(new Dwarf(this.canvasWidth + 20, this.groundY, type));
-    }
-
-    // Bewegen & aufräumen
-    for (const d of this.dwarves) d.update(dt, worldSpeed);
-    this.dwarves = this.dwarves.filter((d) => d.alive && d.x + d.width > -10);
+  // öffentlicher Name: dwarves (zeigt auf die geteilte items-Liste)
+  get dwarves() {
+    return this.items;
+  }
+  set dwarves(v) {
+    this.items = v;
   }
 
-  draw(ctx) {
-    for (const d of this.dwarves) d.draw(ctx);
+  // mit steigender Schwierigkeit kürzere Abstände
+  interval(difficulty) {
+    return Math.max(0.55, this.cooldown - difficulty * 0.08);
+  }
+
+  spawn(difficulty) {
+    const type = pickDwarfType(difficulty, this.rng);
+    this.items.push(new Dwarf(this.canvasWidth + 20, this.groundY, type));
+  }
+
+  keep(d) {
+    return d.alive && d.x + d.width > -10;
   }
 }
 

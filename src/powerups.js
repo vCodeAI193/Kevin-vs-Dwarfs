@@ -1,3 +1,9 @@
+// SpawnManager im Browser global, in Node via require
+const SpawnManager =
+  typeof require !== "undefined" ? require("./spawn-manager.js").SpawnManager
+  : typeof window !== "undefined" ? window.SpawnManager
+  : null;
+
 /**
  * Einsammelbare Power-Ups, die zeitlich begrenzte Fähigkeiten verleihen:
  * - doublejump: ein zweiter Sprung in der Luft
@@ -55,33 +61,19 @@ function pickPowerUpType(rng = Math.random) {
   return types[Math.floor(rng() * types.length) % types.length];
 }
 
-class PowerUpManager {
-  constructor(canvasWidth, groundY, rng = Math.random) {
-    this.canvasWidth = canvasWidth;
-    this.groundY = groundY;
-    this.rng = rng;
-    this.reset();
-  }
-
+class PowerUpManager extends SpawnManager {
   reset() {
-    this.items = [];
-    this.timer = 0;
+    super.reset();
     this.cooldown = 11; // Power-Ups sind selten
   }
 
-  update(dt, worldSpeed) {
-    this.timer += dt;
-    if (this.timer >= this.cooldown) {
-      this.timer = 0;
-      const type = pickPowerUpType(this.rng);
-      this.items.push(new PowerUp(this.canvasWidth + 20, this.groundY - 110, type));
-    }
-    for (const p of this.items) p.update(dt, worldSpeed);
-    this.items = this.items.filter((p) => !p.collected && p.x + p.width > -10);
+  spawn() {
+    const type = pickPowerUpType(this.rng);
+    this.items.push(new PowerUp(this.canvasWidth + 20, this.groundY - 110, type));
   }
 
-  draw(ctx) {
-    for (const p of this.items) p.draw(ctx);
+  keep(p) {
+    return !p.collected && p.x + p.width > -10;
   }
 }
 
