@@ -313,6 +313,37 @@ Produktivcode verdächtigt.
 
 ---
 
+### 2026-06-19 — Aufräumen ohne Angst: ein 800-Zeilen-File entflechten
+
+**Situation:** Das Spiel war fertig und mit 118 Tests abgesichert, aber gewachsen:
+`game.js` hatte 792 Zeilen und mischte Eingabe, Regeln, Boss, Scoring, Loop **und**
+das gesamte Rendering. Vier Spawner-Klassen wiederholten dasselbe Muster, und
+Magic Numbers lagen verstreut.
+
+**Problem / Fehler:** Ein großer Umbau eines funktionierenden Spiels ist riskant –
+besonders, weil `game.js` (DOM/Canvas) kaum durch Unit-Tests gedeckt ist. Ein
+unvorsichtiges Refactoring hätte still etwas kaputt machen können.
+
+**Lösung:** In **risikogestaffelten Stufen**, nach jeder Stufe getestet & committet:
+1. Gemeinsame `SpawnManager`-Basisklasse (test-gedeckt, risikoarm).
+2. Konstanten in `config.js` zentralisiert.
+3. `game.js` entflochten: reine `score.js`-Logik (neue Tests) und – der Knackpunkt –
+   das gesamte Rendering in `renderer.js`. Schlüssel-Einsicht: **Rendering liest den
+   Zustand nur, es schreibt ihn nie.** Also bekommt der Renderer pro Frame einen
+   read-only Snapshot – kein geteilter veränderbarer Zustand, keine versteckten
+   Globals. `game.js` schrumpfte von 792 auf 580 Zeilen.
+
+Da der Renderer nicht unit-testbar ist, sicherte ihn ein **headless Smoke-Harness** ab:
+echte Skripte in Browser-Reihenfolge per indirektem `eval` (damit kein `require`
+sichtbar ist), DOM/Canvas gestubbt, 2500 Frames inkl. Boss & aller Screens – fehlerfrei.
+
+**Lektion:** Refactoring ist eine Frage der Reihenfolge und der Trennlinien. Erst die
+test-gedeckten, risikoarmen Teile; das Riskante zuletzt und entlang einer sauberen
+Naht (hier: „liest" vs. „schreibt"). Wo Unit-Tests nicht reichen, schließt ein kleiner
+Integrations-/Smoke-Harness die Lücke – günstiger als die Angst, etwas anzufassen.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -336,3 +367,7 @@ Produktivcode verdächtigt.
   die Tages-Challenge war dadurch fast geschenkt.
 - **Kurzlebiges über die Zeit testen.** Bei Projektilen/Partikeln das *Ereignis*
   („trat es je auf?") prüfen, nicht den Zustand zu einem willkürlichen Zeitpunkt.
+- **Refactoring in Stufen, entlang sauberer Nähte.** Erst test-gedeckt & risikoarm,
+  Riskantes zuletzt; Rendering vom Zustand trennen über einen read-only Snapshot.
+- **Smoke-Harness schließt die Test-Lücke.** Was Unit-Tests nicht erreichen (Canvas),
+  fängt ein headless Lauf der echten Skripte über viele Frames.

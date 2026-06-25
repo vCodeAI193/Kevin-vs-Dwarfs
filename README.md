@@ -56,14 +56,18 @@ Der ursprüngliche Prototyp entstand in spielbaren Meilensteinen — alle sind e
 Seitdem dazugekommen: Münzen, Highscore, Zwerg-Typen, Hindernisse, Power-Ups,
 Bosskampf, Sound/Partikel, Pause sowie Touch-Steuerung (siehe **Features**).
 
-## Geplante Projektstruktur
+## Projektstruktur
 
 ```
 Kevin-vs-Dwarfs/
 ├── index.html          # Einstiegspunkt, Canvas, lädt die Skripte
 ├── src/
-│   ├── game.js         # Game-Loop, Zustände, Kollisionen, HUD
+│   ├── config.js       # zentrale Spiel-Konstanten (Balancing)
+│   ├── game.js         # schlanker Orchestrator: Zustand, Eingabe, Update-Loop
+│   ├── renderer.js     # gesamtes Zeichnen (HUD/Screens) aus read-only Snapshot
+│   ├── score.js        # reine Score-Berechnung (testbar)
 │   ├── player.js       # Kevin: Bewegung, Sprung, Wirbelsturm, Power
+│   ├── spawn-manager.js# Basisklasse für alle Spawner (Timer/Spawn/Move/Filter)
 │   ├── enemies.js      # Zwerge: Typen, Spawn, Bewegung
 │   ├── collectibles.js # Münzen: Spawn, Einsammeln
 │   ├── obstacles.js    # Hindernisse (Felsen)
@@ -87,6 +91,15 @@ Kevin-vs-Dwarfs/
 ├── README.md
 └── LICENSE
 ```
+
+### Architektur-Prinzipien
+
+- **Logik getrennt von Darstellung:** `game.js` (Zustand/Regeln) baut pro Frame einen
+  read-only Snapshot, den `renderer.js` zeichnet — der Renderer ändert nie Zustand.
+- **Ein Spawn-Muster, eine Stelle:** alle Spawner erben von `spawn-manager.js`.
+- **Eine Quelle der Wahrheit fürs Balancing:** Konstanten leben in `config.js`.
+- **Reine, testbare Kerne:** `score.js`, `collision.js`, `combo.js`, `stats.js`,
+  `achievements.js`, `daily.js` sind frei von DOM/Canvas und vollständig unit-getestet.
 
 ## Lokal ausführen
 
@@ -117,7 +130,7 @@ Skin-Freischaltung, die Lifetime-Statistiken und die Erfolgs-Regeln, das Toast-S
 den deterministischen Tages-Seed (`src/daily.js`), das Partikelsystem, die
 Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung (`src/collision.js`).
 Ein Smoke-Test prüft zudem, dass `index.html` alle `src/`-Skripte korrekt einbindet.
-Aktuell **118 Tests**.
+Aktuell **131 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).
