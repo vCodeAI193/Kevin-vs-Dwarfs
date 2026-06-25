@@ -503,12 +503,13 @@
     handlePowerUpCollisions();
     checkLiveAchievements();
 
-    score =
-      Math.floor(distance) +
-      kills * 50 +
-      coinsCollected * COIN_VALUE +
-      bossBonus +
-      comboBonus;
+    score = computeScore({
+      distance,
+      kills,
+      coins: coinsCollected,
+      bossBonus,
+      comboBonus,
+    });
   }
 
   // Erfolge schon während des Laufs prüfen (gegen den aktuellen Fortschritt) und
