@@ -24,6 +24,7 @@
   const combo = new Combo();
   const toasts = new ToastManager();
   const sound = new SoundFX();
+  const renderer = new Renderer(ctx, W, H, GROUND_Y);
   const storage = typeof localStorage !== "undefined" ? localStorage : null;
 
   const BOSS_INTERVAL = 1500; // Distanz zwischen Bosskämpfen
@@ -538,246 +539,32 @@
   }
 
   // ---- Zeichnen ----
-  function drawBackground() {
-    const biome = getBiome(distance);
-
-    // Himmel
-    ctx.fillStyle = biome.sky;
-    ctx.fillRect(0, 0, W, H);
-
-    // hintere Parallax-Schicht (langsamer, dunkler)
-    ctx.save();
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = biome.hill;
-    for (let i = -1; i < 4; i++) {
-      const x = i * 320 - (bgOffset * 0.25) % 320;
-      ctx.beginPath();
-      ctx.arc(x + 160, GROUND_Y, 200, Math.PI, 0);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // vordere Parallax-Hügel
-    ctx.fillStyle = biome.hill;
-    for (let i = -1; i < 4; i++) {
-      const x = i * 280 - bgOffset * 0.5;
-      ctx.beginPath();
-      ctx.arc(x + 140, GROUND_Y, 150, Math.PI, 0);
-      ctx.fill();
-    }
-
-    // Boden
-    ctx.fillStyle = biome.ground;
-    ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-    ctx.fillStyle = biome.grass;
-    ctx.fillRect(0, GROUND_Y, W, 10);
-  }
-
-  function drawHUD() {
-    ctx.fillStyle = "#1b1033";
-    ctx.textAlign = "left";
-    ctx.font = "bold 20px system-ui, sans-serif";
-    ctx.fillText("Score: " + score, 16, 28);
-    ctx.font = "14px system-ui, sans-serif";
-    ctx.fillText("Best: " + highscore, 16, 48);
-    ctx.fillText("Zwerge: " + kills + "   Münzen: " + coinsCollected, 16, 66);
-    ctx.fillText("Biom: " + getBiome(distance).name, 16, 84);
-    if (dailyMode) {
-      ctx.fillStyle = "#ffd84d";
-      ctx.fillText("📅 Tages-Challenge", 16, 102);
-      ctx.fillStyle = "#1b1033";
-    }
-
-    // Combo-Anzeige (nur ab 2x)
-    if (combo.active) {
-      ctx.save();
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#ff9b3d";
-      ctx.font = "bold 26px system-ui, sans-serif";
-      ctx.fillText("COMBO x" + combo.multiplier, W / 2, 92);
-      ctx.restore();
-    }
-
-    // Power-Leiste
-    const barW = 180;
-    const barX = W - barW - 16;
-    const barY = 20;
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    ctx.fillRect(barX, barY, barW, 16);
-    ctx.fillStyle = player.powerFull ? "#ffd84d" : "#9be7ff";
-    ctx.fillRect(barX, barY, (barW * player.power) / player.powerMax, 16);
-    ctx.strokeStyle = "#1b1033";
-    ctx.strokeRect(barX, barY, barW, 16);
-    ctx.fillStyle = "#1b1033";
-    ctx.font = "bold 12px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(player.powerFull ? "WIRBELSTURM BEREIT! (F)" : "Wirbelsturm", barX + barW / 2, barY + 30);
-
-    // Aktive Power-Ups
-    const active = [];
-    if (player.hasDoubleJump) active.push(["Doppelsprung", player.doubleJumpTimer, "#7cf"]);
-    if (player.hasShield) active.push(["Schild", player.shieldTimer, "#4ad0ff"]);
-    if (player.hasMagnet) active.push(["Magnet", player.magnetTimer, "#ff6fae"]);
-    ctx.textAlign = "right";
-    ctx.font = "bold 13px system-ui, sans-serif";
-    active.forEach(([label, t, color], i) => {
-      ctx.fillStyle = color;
-      ctx.fillText(label + " " + Math.ceil(t) + "s", W - 16, 58 + i * 18);
-    });
-
-    // Boss-Hinweis
-    if (boss) {
-      ctx.fillStyle = "#6a3d8f";
-      ctx.font = "bold 18px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("⚔️ Zwergenkönig!", W / 2, 28);
-    }
-  }
-
-  function drawCenterText(title, subtitle) {
-    ctx.fillStyle = "rgba(27,16,51,0.55)";
-    ctx.fillRect(0, 0, W, H);
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 36px system-ui, sans-serif";
-    ctx.fillText(title, W / 2, H / 2 - 10);
-    ctx.font = "18px system-ui, sans-serif";
-    ctx.fillText(subtitle, W / 2, H / 2 + 26);
-  }
-
+  // Baut einen read-only Snapshot des Zustands und übergibt ihn dem Renderer.
   function render() {
-    drawBackground();
-    obstacles.draw(ctx);
-    coins.draw(ctx);
-    powerups.draw(ctx);
-    enemies.draw(ctx);
-    if (boss) boss.draw(ctx);
-    player.draw(ctx);
-    particles.draw(ctx);
-
-    drawHUD();
-    toasts.draw(ctx, W);
-    if (state === "ready") {
-      drawReady();
-    } else if (state === "paused") {
-      drawCenterText("Pause", "P oder Esc zum Weiterspielen");
-    } else if (state === "gameover") {
-      drawGameOver();
-    } else if (state === "achievements") {
-      drawAchievementsScreen();
-    }
-  }
-
-  function drawAchievementsScreen() {
-    dimOverlay();
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 28px system-ui, sans-serif";
-    ctx.fillText("🏅 Erfolge & Statistiken", W / 2, 44);
-
-    // Lifetime-Statistiken
-    ctx.font = "14px system-ui, sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillText(
-      `Läufe: ${stats.runs}   Zwerge: ${stats.totalKills}   Münzen: ${stats.totalCoins}   ` +
-        `Bosse: ${stats.bossesDefeated}   beste Combo: ${stats.bestCombo}×   Rekord-Distanz: ${stats.bestDistance}`,
-      W / 2, 70
-    );
-
-    // Erfolgsliste
-    const unlocked = evaluateAchievements(stats);
-    ctx.textAlign = "left";
-    let y = 100;
-    for (const a of ACHIEVEMENTS) {
-      const done = unlocked.includes(a.id);
-      ctx.fillStyle = done ? "#ffd84d" : "rgba(255,255,255,0.45)";
-      ctx.font = "bold 15px system-ui, sans-serif";
-      ctx.fillText((done ? "✓ " : "🔒 ") + a.name, 70, y);
-      ctx.fillStyle = done ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.4)";
-      ctx.font = "13px system-ui, sans-serif";
-      ctx.fillText(a.desc, 250, y);
-      y += 26;
-    }
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = "15px system-ui, sans-serif";
-    ctx.fillText("A / Klick zum Schließen", W / 2, H - 18);
-  }
-
-  function dimOverlay() {
-    ctx.fillStyle = "rgba(27,16,51,0.6)";
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  function drawReady() {
-    const subtitle = dailyMode
-      ? "Tages-Challenge · Leertaste / Klick zum Starten"
-      : "Leertaste / Klick zum Starten";
-    drawCenterText("Kevin gegen die Zwerge", subtitle);
-
-    if (dailyMode) {
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#ffd84d";
-      ctx.font = "14px system-ui, sans-serif";
-      const best = loadDailyBest(storage, todaySeed());
-      ctx.fillText(
-        "📅 Heutiger Parcours – Tages-Best: " + best,
-        W / 2, H / 2 + 52
-      );
-    }
-
-    // Lifetime-Statistiken dezent am unteren Rand
-    if (stats.runs > 0) {
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.font = "13px system-ui, sans-serif";
-      ctx.fillText(
-        `Läufe: ${stats.runs}  ·  Zwerge: ${stats.totalKills}  ·  ` +
-          `Münzen: ${stats.totalCoins}  ·  Bosse: ${stats.bossesDefeated}`,
-        W / 2, H - 24
-      );
-    }
-  }
-
-  function drawGameOver() {
-    dimOverlay();
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 34px system-ui, sans-serif";
-    const rekord = score >= highscore && score > 0;
-    ctx.fillText((rekord ? "🏆 Neuer Rekord! " : "Game Over") , W / 2, 70);
-
-    // Lauf-Zusammenfassung
-    ctx.font = "16px system-ui, sans-serif";
-    const r = lastRun || { distance: 0, kills: 0, coins: 0, bosses: 0, maxCombo: 0 };
-    const lines = [
-      `Score: ${score}` + (rekord ? "" : `   (Best: ${highscore})`),
-      `Distanz: ${r.distance}   Zwerge: ${r.kills}   Münzen: ${r.coins}`,
-      `Bosse: ${r.bosses}   beste Combo: ${r.maxCombo}×`,
-    ];
-    lines.forEach((line, i) => ctx.fillText(line, W / 2, 110 + i * 24));
-
-    // Neu freigeschaltete Erfolge
-    let y = 110 + lines.length * 24 + 12;
-    if (lastNewAchievements.length > 0) {
-      ctx.fillStyle = "#ffd84d";
-      ctx.font = "bold 16px system-ui, sans-serif";
-      ctx.fillText("🎉 Neuer Erfolg!", W / 2, y);
-      y += 22;
-      ctx.font = "14px system-ui, sans-serif";
-      for (const id of lastNewAchievements) {
-        const a = getAchievement(id);
-        if (a) {
-          ctx.fillText(`${a.name} – ${a.desc}`, W / 2, y);
-          y += 20;
-        }
-      }
-    }
-
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.font = "16px system-ui, sans-serif";
-    ctx.fillText("Leertaste / Klick für neuen Versuch", W / 2, H - 22);
+    renderer.render({
+      state,
+      distance,
+      bgOffset,
+      score,
+      highscore,
+      kills,
+      coinsCollected, // Anzahl eingesammelter Münzen (Zahl)
+      dailyMode,
+      dailyBest: dailyMode && state === "ready" ? loadDailyBest(storage, todaySeed()) : dailyBest,
+      combo,
+      player,
+      boss,
+      stats,
+      lastRun,
+      lastNewAchievements,
+      // Manager (zum Zeichnen)
+      obstacles,
+      coins,
+      powerups,
+      enemies,
+      particles,
+      toasts,
+    });
   }
 
   // ---- Loop ----
