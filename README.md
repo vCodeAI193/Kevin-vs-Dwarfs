@@ -15,6 +15,7 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Aufbau, Datenfluss, Muster, „Wie füge ich X hinzu" |
 | [`docs/REQUIREMENTS.md`](./docs/REQUIREMENTS.md) | Funktionale & nicht-funktionale Anforderungen |
 | [`docs/FEATURES.md`](./docs/FEATURES.md) | Vollständige Feature-Inventur (Quelle der Wahrheit) |
+| [`docs/FEATURE_IDEAS.md`](./docs/FEATURE_IDEAS.md) | 100 mögliche Features (Ideen-/Backlog-Katalog) |
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Mitarbeit: lokal starten, Tests, Konventionen |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Chronologie „was wurde getan" |
 | [`CLAUDE.md`](./CLAUDE.md) | Schneller Einstieg für KI/neue Entwickler |

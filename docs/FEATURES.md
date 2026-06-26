@@ -53,6 +53,9 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 
 ## Geplant (Nordstern)
 
+> Eine breite Sammlung von **100 möglichen Erweiterungen** steht in
+> [FEATURE_IDEAS.md](./FEATURE_IDEAS.md).
+
 | Feature | Status |
 |---------|:------:|
 | Online-/Tages-Bestenliste | 🎯 |
