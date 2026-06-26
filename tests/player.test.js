@@ -121,3 +121,50 @@ test("grantInvulnerability schützt für die angegebene Zeit", () => {
   for (let i = 0; i < 70; i++) p.update(1 / 60);
   assert.equal(p.invulnerable, false);
 });
+
+test("Coyote-Time: kurz nach dem Verlassen der Kante ist ein Sprung noch möglich", () => {
+  const p = freshPlayer();
+  // einen Frame am Boden updaten -> coyoteTimer wird aufgefüllt
+  p.update(1 / 60);
+  assert.ok(p.coyoteTimer > 0);
+  // künstlich von der Kante "fallen": nicht am Boden, aber coyote noch aktiv
+  p.onGround = false;
+  assert.equal(p.jump(), true); // dank Coyote-Time
+});
+
+test("Coyote-Time läuft ab: ohne Boden und ohne Fenster kein Sprung", () => {
+  const p = freshPlayer();
+  p.onGround = false;
+  p.coyoteTimer = 0;
+  assert.equal(p.jump(), false);
+});
+
+test("Sprung-Puffer: ein zu früher Sprung wird bei der Landung ausgeführt", () => {
+  const p = freshPlayer();
+  // in der Luft, kurz vor der Landung
+  p.onGround = false;
+  p.coyoteTimer = 0;
+  p.y = p.groundY - p.height - 2; // knapp über dem Boden
+  p.vy = 5;
+  assert.equal(p.jump(), false); // jetzt nicht möglich -> gepuffert
+  assert.ok(p.jumpBufferTimer > 0);
+  p.update(1 / 60); // landet -> gepufferter Sprung greift
+  assert.ok(p.vy < 0, "sollte direkt wieder abspringen");
+  assert.equal(p.onGround, false);
+});
+
+test("variable Sprunghöhe: cutJump kappt den Aufstieg", () => {
+  const p = freshPlayer();
+  p.jump(); // vy = -jumpForce
+  const before = p.vy;
+  p.cutJump();
+  assert.ok(p.vy > before); // näher an 0 (weniger negativ)
+  assert.ok(p.vy < 0);
+});
+
+test("cutJump beim Fallen hat keinen Effekt", () => {
+  const p = freshPlayer();
+  p.vy = 5;
+  p.cutJump();
+  assert.equal(p.vy, 5);
+});

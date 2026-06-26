@@ -27,6 +27,8 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 > Hier nur die Highlights:
 
 - 🏃 Endlos-Lauf nach rechts mit Springen, ansteigender Schwierigkeit
+- 🦘 **Faires Springen:** Coyote-Time, Sprung-Puffer und variable Sprunghöhe
+- 💥 **Screen-Shake** bei Stomp, Boss-Treffer und Wirbelsturm (mehr „Wucht")
 - 🦶 Zwerge per **Stomp** besiegen; seitlicher Kontakt = Game Over
 - 🌀 **Wirbelsturm** als Spezialangriff (Power-Leiste füllt sich pro Kill/Münze)
 - 🧝 **Zwerg-Typen:** normal, schnell und gepanzert (nur per Wirbelsturm besiegbar)
@@ -37,7 +39,7 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
   schneller und wirft ab Phase 2 Hämmer, über die Kevin springen muss; bringt Score-Bonus
 - 🔔 **Toast-Hinweise:** kurze Einblendungen für Boss-Phasen und frisch freigeschaltete Erfolge
 - 🔥 **Combo-System:** schnelle Kills hintereinander geben einen Score-Multiplikator (bis 8×)
-- 🌄 **Biome:** Umgebung & Parallax wechseln mit der Distanz (Wiese → Höhle → Lava → Eis)
+- 🌄 **Biome:** Umgebung & Parallax wechseln mit der Distanz (Wiese → Höhle → Lava → Eis → Wüste)
 - 🎨 **Skins für Kevin:** per Highscore freischaltbar und auswählbar (gespeichert)
 - 📊 **Statistiken & Erfolge:** dauerhafte Lifetime-Stats und freischaltbare Achievements
 - 🏅 **Erfolge-Screen:** Übersicht aller Erfolge (frei/gesperrt) und Lifetime-Stats
@@ -88,6 +90,7 @@ Kevin-vs-Dwarfs/
 │   ├── boss.js         # mehrphasiger Bosskampf (Zwergenkönig)
 │   ├── projectile.js   # Boss-Wurfgeschosse (Hämmer)
 │   ├── toast.js        # kurze Bildschirm-Hinweise (Toasts)
+│   ├── screenshake.js  # Screen-Shake (Trauma-Modell)
 │   ├── combo.js        # Combo-System (Score-Multiplikator)
 │   ├── biomes.js       # Biome & Hintergrundfarben nach Distanz
 │   ├── skins.js        # freischaltbare Kevin-Skins
@@ -143,7 +146,7 @@ Skin-Freischaltung, die Lifetime-Statistiken und die Erfolgs-Regeln, das Toast-S
 den deterministischen Tages-Seed (`src/daily.js`), das Partikelsystem, die
 Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung (`src/collision.js`).
 Ein Smoke-Test prüft zudem, dass `index.html` alle `src/`-Skripte korrekt einbindet.
-Aktuell **131 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
+Aktuell **142 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).

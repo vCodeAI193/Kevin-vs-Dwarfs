@@ -16,6 +16,7 @@ const BIOMES = [
   { name: "Höhle", sky: "#2c2a3a", hill: "#3b3550", ground: "#241c14", grass: "#4a3a2a" },
   { name: "Lava", sky: "#3a1410", hill: "#7a2418", ground: "#2a0f0a", grass: "#c0392b" },
   { name: "Eis", sky: "#cfe8ff", hill: "#a9cfe6", ground: "#4a5a6a", grass: "#dff1ff" },
+  { name: "Wüste", sky: "#f3d39b", hill: "#e0b56b", ground: "#9c6b34", grass: "#c98f4a" },
 ];
 
 /** Liefert das Biom für eine Distanz (mit Schleife über alle Biome). */

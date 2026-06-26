@@ -22,6 +22,10 @@ test("negative/ungültige Distanz fällt auf das erste Biom zurück", () => {
   assert.equal(getBiomeIndex(-500), 0);
 });
 
+test("enthält das Wüsten-Biom", () => {
+  assert.ok(BIOMES.some((b) => b.name === "Wüste"));
+});
+
 test("jedes Biom hat alle Farb-Felder", () => {
   for (const b of BIOMES) {
     for (const key of ["name", "sky", "hill", "ground", "grass"]) {

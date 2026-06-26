@@ -9,6 +9,8 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 |---------|:------:|-------|
 | Endlos-Lauf, scrollende Welt, steigende Schwierigkeit | ✅ | `game.js` |
 | Springen (Tastatur/Touch), Schwerkraft | ✅ | `player.js` |
+| Coyote-Time & Sprung-Puffer (faireres Timing) | ✅ | `player.js` |
+| Variable Sprunghöhe (Taste kürzer = niedriger) | ✅ | `player.js` |
 | Stomp – Zwerge von oben besiegen | ✅ | `collision.js`, `game.js` |
 | Wirbelsturm – aufladbarer Rundum-Spezialangriff | ✅ | `player.js` |
 
@@ -46,6 +48,8 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 |---------|:------:|-------|
 | Synthetischer Sound (Web Audio, ohne Dateien), Ton an/aus | ✅ | `audio.js` |
 | Partikel-Effekte | ✅ | `particles.js` |
+| Screen-Shake bei Stomp/Boss/Wirbelsturm (Trauma-Modell) | ✅ | `screenshake.js` |
+| Biom „Wüste" (zusätzlich zu Wiese/Höhle/Lava/Eis) | ✅ | `biomes.js` |
 | Toast-Hinweise (Erfolge, Boss-Phasen) | ✅ | `toast.js` |
 | Pause (P/Esc) | ✅ | `game.js` |
 | Game-Over-Lauf-Zusammenfassung | ✅ | `renderer.js` |

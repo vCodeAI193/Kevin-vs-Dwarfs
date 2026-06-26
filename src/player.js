@@ -34,6 +34,12 @@ class Player {
     };
     this.magnetRadius = CONFIG.powerUp.magnetRadius;
 
+    // Sprung-Feinjustierung (Fairness)
+    const pj = CONFIG.player || {};
+    this.coyoteTime = pj.coyoteTime || 0;
+    this.jumpBufferTime = pj.jumpBufferTime || 0;
+    this.jumpCutMultiplier = pj.jumpCutMultiplier != null ? pj.jumpCutMultiplier : 0.5;
+
     // Skin-Farben (per setSkin überschreibbar)
     this.bodyColor = "#2e7d32";
     this.headColor = "#ffcc99";
@@ -60,6 +66,8 @@ class Player {
     this.shieldTimer = 0;
     this.magnetTimer = 0;
     this.invulnTimer = 0; // kurze i-Frames nach einem abgefangenen Treffer
+    this.coyoteTimer = 0; // > 0: kurz nach dem Verlassen der Kante noch springbar
+    this.jumpBufferTimer = 0; // > 0: ein zu früher Sprung wartet auf die Landung
   }
 
   get invulnerable() {
@@ -107,11 +115,18 @@ class Player {
     return true;
   }
 
+  // interner Boden-/Coyote-Sprung
+  _groundJump() {
+    this.vy = -this.jumpForce;
+    this.onGround = false;
+    this.coyoteTimer = 0;
+    this.jumpsUsed = 1;
+  }
+
   jump() {
-    if (this.onGround) {
-      this.vy = -this.jumpForce;
-      this.onGround = false;
-      this.jumpsUsed = 1;
+    // Boden oder noch im Coyote-Fenster
+    if (this.onGround || this.coyoteTimer > 0) {
+      this._groundJump();
       return true;
     }
     // Doppelsprung in der Luft (nur mit aktivem Power-Up)
@@ -120,7 +135,14 @@ class Player {
       this.jumpsUsed = 2;
       return true;
     }
+    // Konnte (noch) nicht springen -> Sprung puffern (greift bei der Landung)
+    this.jumpBufferTimer = this.jumpBufferTime;
     return false;
+  }
+
+  /** Variable Sprunghöhe: beim Loslassen der Taste den Aufstieg kappen. */
+  cutJump() {
+    if (this.vy < 0) this.vy *= this.jumpCutMultiplier;
   }
 
   /** Erhöht die Power-Leiste um einen Betrag (gedeckelt bei powerMax). */
@@ -150,7 +172,17 @@ class Player {
       this.vy = 0;
       this.onGround = true;
       this.jumpsUsed = 0; // beim Landen Sprünge zurücksetzen
+      // gepufferten Sprung bei der Landung sofort ausführen
+      if (this.jumpBufferTimer > 0) {
+        this._groundJump();
+        this.jumpBufferTimer = 0;
+      }
     }
+
+    // Coyote-Time: am Boden auffüllen, in der Luft herunterzählen
+    if (this.onGround) this.coyoteTimer = this.coyoteTime;
+    else if (this.coyoteTimer > 0) this.coyoteTimer -= dt;
+    if (this.jumpBufferTimer > 0) this.jumpBufferTimer -= dt;
 
     // Wirbelsturm-Animation herunterzählen
     if (this.whirlTimer > 0) {

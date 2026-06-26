@@ -344,6 +344,34 @@ Integrations-/Smoke-Harness die Lücke – günstiger als die Angst, etwas anzuf
 
 ---
 
+### 2026-06-20 — Spielgefühl ist Logik: Coyote-Time, Puffer & Shake testbar bauen
+
+**Situation:** Aus dem 100-Ideen-Katalog kam ein „Game-Feel"-Batch: Coyote-Time,
+Sprung-Puffer, variable Sprunghöhe und Screen-Shake — plus ein neues Biom.
+
+**Problem / Fehler:** „Spielgefühl" klingt nach etwas, das man nur *erfühlen* und nicht
+testen kann. Tatsächlich sind es aber präzise Regeln über der Zeit: „noch X ms nach der
+Kante springbar", „gepufferter Sprung greift bei der Landung", „Aufstieg beim Loslassen
+kappen", „Trauma klingt mit Rate Y ab". Die Gefahr war außerdem, die bestehenden,
+schon getesteten Sprung-Tests zu brechen.
+
+**Lösung:** Die neuen Regeln in `player.js` so eingebaut, dass das alte Verhalten exakt
+erhalten bleibt (Coyote-Timer wird beim Springen genullt, damit ein direkt
+nachfolgender Sprung in der Luft nicht „gratis" feuert) — die vorhandenen Tests blieben
+unverändert grün. Den Screen-Shake als eigenes, **deterministisches** Modul
+(`screenshake.js`) mit Trauma-Modell und sinus-basiertem Versatz (kein `Math.random`) →
+direkt unit-testbar (Trauma deckeln, abklingen, Versatz ≤ Maximum). Den Shake im
+Renderer nur auf die **Spielobjekte** gelegt, nicht auf Hintergrund/HUD — so gibt es
+keine Randlücken und das HUD bleibt ruhig lesbar.
+
+**Lektion:** „Juice" ist kein Bauchgefühl, sondern testbare Logik. Wer die Regel hinter
+dem Effekt benennt (Zeitfenster, Abklingrate, Kappung), kann sie als pure Funktion
+prüfen — und Effekte deterministisch statt zufällig bauen, damit sie reproduzierbar
+sind. Und: Beim Erweitern getesteter Logik zuerst überlegen, welche Altannahme der neue
+Pfad verletzen könnte (hier der „zweite Gratis-Sprung").
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
@@ -371,3 +399,5 @@ Integrations-/Smoke-Harness die Lücke – günstiger als die Angst, etwas anzuf
   Riskantes zuletzt; Rendering vom Zustand trennen über einen read-only Snapshot.
 - **Smoke-Harness schließt die Test-Lücke.** Was Unit-Tests nicht erreichen (Canvas),
   fängt ein headless Lauf der echten Skripte über viele Frames.
+- **„Juice" ist testbare Logik.** Coyote-Time, Sprung-Puffer, Trauma-Shake sind Regeln
+  über der Zeit — als pure, deterministische Module bauen (kein `Math.random`).

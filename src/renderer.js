@@ -13,7 +13,12 @@ class Renderer {
   }
 
   render(s) {
+    // Hintergrund ohne Versatz (vermeidet Randlücken beim Shake)
     this.drawBackground(s);
+
+    // Screen-Shake nur auf die Spielobjekte anwenden, nicht aufs HUD/Overlays
+    this.ctx.save();
+    this.ctx.translate(s.shakeX || 0, s.shakeY || 0);
     s.obstacles.draw(this.ctx);
     s.coins.draw(this.ctx);
     s.powerups.draw(this.ctx);
@@ -21,6 +26,7 @@ class Renderer {
     if (s.boss) s.boss.draw(this.ctx);
     s.player.draw(this.ctx);
     s.particles.draw(this.ctx);
+    this.ctx.restore();
 
     this.drawHUD(s);
     s.toasts.draw(this.ctx, this.W);

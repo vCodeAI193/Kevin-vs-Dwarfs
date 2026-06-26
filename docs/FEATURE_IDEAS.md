@@ -14,6 +14,8 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
   `—` = pur im Browser umsetzbar, passt zum aktuellen Stack.
 - Wo sinnvoll, ist der Bezug zu bestehenden Mustern genannt (z. B. `DWARF_TYPES`,
   `CONFIG`, seedbarer `mulberry32`, Achievements-als-Daten).
+- **Bereits umgesetzt** (✅, siehe [FEATURES.md](./FEATURES.md)): FI-003, FI-005,
+  FI-030, FI-073.
 
 ---
 
@@ -23,9 +25,9 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 |----|------|:------:|:------:|
 | FI-001 | **Wandsprung**: an Hindernissen kurz abdrücken | M | — |
 | FI-002 | **Ducken/Slide** unter niedrige Gefahren | M | — |
-| FI-003 | **Variable Sprunghöhe** je nach Tastendruckdauer | S | — |
+| FI-003 | ✅ **Variable Sprunghöhe** je nach Tastendruckdauer | S | — |
 | FI-004 | **Dash** (kurzer Vorwärts-Spurt) mit Cooldown | M | — |
-| FI-005 | **Coyote-Time & Sprung-Puffer** für faireres Timing | S | — |
+| FI-005 | ✅ **Coyote-Time & Sprung-Puffer** für faireres Timing | S | — |
 | FI-006 | **Boden-Stampfer**: schnelles Fallen als Angriff | S | — |
 | FI-007 | **Parry/Konter** kurz vor Aufprall (perfektes Timing) | M | — |
 | FI-008 | **Doppel-Stomp-Combo** (zwei Gegner in einem Sprung) belohnt | S | — |
@@ -65,7 +67,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 
 | ID | Idee | Aufwand | Leitplanke |
 |----|------|:------:|:------:|
-| FI-030 | **Biom „Wüste"** mit Treibsand — neuer `BIOMES`-Eintrag | M | — |
+| FI-030 | ✅ **Biom „Wüste"** mit Treibsand — neuer `BIOMES`-Eintrag | M | — |
 | FI-031 | **Biom „Himmel/Wolken"** mit Wind-Schub | M | — |
 | FI-032 | **Bewegliche Plattformen** | M | — |
 | FI-033 | **Echte Abgründe/Lücken** (Sturz = Game Over) | M | — |
@@ -133,7 +135,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 
 | ID | Idee | Aufwand | Leitplanke |
 |----|------|:------:|:------:|
-| FI-073 | **Screen-Shake** bei Stomp/Boss-Treffer | S | — |
+| FI-073 | ✅ **Screen-Shake** bei Stomp/Boss-Treffer | S | — |
 | FI-074 | **Hit-Stop** (kurzes Einfrieren bei Treffern) | S | — |
 | FI-075 | **Dynamische Musik**, wächst mit Tempo/Combo | M | — |
 | FI-076 | **Mehr SFX-Variation** (synthetisch) — `audio.js` | S | — |

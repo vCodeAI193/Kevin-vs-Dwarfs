@@ -24,6 +24,7 @@
   const combo = new Combo();
   const toasts = new ToastManager();
   const sound = new SoundFX();
+  const shake = new ScreenShake();
   const renderer = new Renderer(ctx, W, H, GROUND_Y);
   const storage = typeof localStorage !== "undefined" ? localStorage : null;
 
@@ -103,6 +104,11 @@
       if (jumpKeys.includes(e.code)) doJump();
       if (whirlKeys.includes(e.code)) doWhirlwind();
     }
+  });
+
+  // Loslassen der Sprungtaste -> variable Sprunghöhe (Aufstieg kappen)
+  window.addEventListener("keyup", (e) => {
+    if (jumpKeys.includes(e.code) && state === "playing") player.cutJump();
   });
 
   // Geteilte Aktionen – von Tastatur, Canvas-Tap und Bildschirm-Buttons genutzt
@@ -201,6 +207,7 @@
     powerups.reset();
     combo.reset();
     toasts.reset();
+    shake.reset();
     runMaxCombo = 0;
     bossesThisRun = 0;
     lastBossPhase = 0;
@@ -223,6 +230,7 @@
   function doWhirlwind() {
     if (!player.triggerWhirlwind()) return;
     sound.whirlwind();
+    shake.add(0.5);
     const px = player.x + player.width / 2;
     const py = player.y + player.height / 2;
     particles.emit(px, py, 26, { color: "#9be7ff", speed: 320, life: 0.6, size: 5 });
@@ -245,6 +253,7 @@
     if (player.invulnerable) return true;
     if (player.consumeShield()) {
       player.grantInvulnerability(1.0);
+      shake.add(0.45);
       particles.emit(player.x + player.width / 2, player.y + player.height / 2, 18, {
         color: "#4ad0ff", speed: 240, life: 0.5, size: 4,
       });
@@ -258,6 +267,7 @@
     d.alive = false;
     kills++;
     player.addKillPower();
+    shake.add(0.25);
     registerComboKill(d.x + d.width / 2, d.y);
     particles.emit(d.x + d.width / 2, d.y + d.height / 2, 12, {
       color: "#d8a", speed: 200, life: 0.45, size: 4,
@@ -406,6 +416,7 @@
       if (boss.hit()) {
         player.addKillPower();
         registerComboKill(player.x + player.width / 2, player.y);
+        shake.add(0.4);
         particles.emit(player.x + player.width / 2, player.y + player.height, 10, {
           color: "#d8a", speed: 180, life: 0.4, size: 4,
         });
@@ -438,6 +449,7 @@
     if (state !== "playing") return;
     state = "gameover";
     sound.gameover();
+    shake.add(0.7);
     highscore = saveHighscore(storage, score);
 
     // Lauf zusammenfassen, Statistiken & Erfolge aktualisieren
@@ -466,6 +478,7 @@
   function update(dt) {
     if (state !== "playing") {
       particles.update(dt); // Effekte laufen auch im Game-Over-Bild aus
+      shake.update(dt);
       return;
     }
 
@@ -484,6 +497,7 @@
     powerups.update(dt, worldSpeed);
     particles.update(dt);
     toasts.update(dt);
+    shake.update(dt);
     applyMagnet(dt);
     combo.update(dt);
     runMaxCombo = Math.max(runMaxCombo, combo.multiplier);
@@ -541,8 +555,11 @@
   // ---- Zeichnen ----
   // Baut einen read-only Snapshot des Zustands und übergibt ihn dem Renderer.
   function render() {
+    const shakeOffset = shake.getOffset();
     renderer.render({
       state,
+      shakeX: shakeOffset.x,
+      shakeY: shakeOffset.y,
       distance,
       bgOffset,
       score,

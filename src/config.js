@@ -21,6 +21,16 @@ const CONFIG = {
     powerupCooldown: 11,
   },
 
+  // Spielgefühl/Fairness beim Springen
+  player: {
+    coyoteTime: 0.1, // Sekunden, in denen man nach dem Verlassen der Kante noch springen darf
+    jumpBufferTime: 0.12, // Sekunden, in denen ein zu früher Sprung gepuffert wird
+    jumpCutMultiplier: 0.45, // beim Loslassen wird die Aufwärts-Geschwindigkeit gekappt
+  },
+
+  // Screen-Shake: maximaler Versatz (px) und Abklingrate (Trauma/Sekunde)
+  shake: { maxOffset: 12, decay: 1.8 },
+
   // Power-Up-Dauern (Sekunden) und Magnet-Reichweite
   powerUp: { doublejump: 9, shield: 7, magnet: 8, magnetRadius: 220 },
 
