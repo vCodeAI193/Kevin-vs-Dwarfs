@@ -43,3 +43,4 @@ scripts/setup-hooks.sh
 | 2026-06-19 | [Aufräumen ohne Angst: ein 800-Zeilen-God-File entflechten](./2026-06-19-god-file-entflechten.md) |
 | 2026-06-20 | [Spielgefühl ist testbare Logik — Coyote-Time, Sprung-Puffer & Screen-Shake](./2026-06-20-spielgefuehl-ist-testbare-logik.md) |
 | 2026-06-21 | [Eine Naht, zwei Features — Hit-Stop und Zen-Modus mit minimalem Eingriff](./2026-06-21-eine-naht-zwei-features.md) |
+| 2026-06-22 | [Der Stern, der schon da war — Features als Aufsatz auf bestehenden Zustand](./2026-06-22-stern-bestehenden-zustand-wiederverwenden.md) |

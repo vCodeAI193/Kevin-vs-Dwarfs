@@ -31,6 +31,7 @@ class Player {
       doublejump: CONFIG.powerUp.doublejump,
       shield: CONFIG.powerUp.shield,
       magnet: CONFIG.powerUp.magnet,
+      star: CONFIG.powerUp.star,
     };
     this.magnetRadius = CONFIG.powerUp.magnetRadius;
 
@@ -66,12 +67,17 @@ class Player {
     this.shieldTimer = 0;
     this.magnetTimer = 0;
     this.invulnTimer = 0; // kurze i-Frames nach einem abgefangenen Treffer
+    this.starTimer = 0; // Unverwundbarkeits-Stern
     this.coyoteTimer = 0; // > 0: kurz nach dem Verlassen der Kante noch springbar
     this.jumpBufferTimer = 0; // > 0: ein zu früher Sprung wartet auf die Landung
   }
 
   get invulnerable() {
-    return this.invulnTimer > 0;
+    return this.invulnTimer > 0 || this.starTimer > 0;
+  }
+
+  get hasStar() {
+    return this.starTimer > 0;
   }
 
   grantInvulnerability(seconds) {
@@ -105,6 +111,7 @@ class Player {
     if (type === "doublejump") this.doubleJumpTimer = d;
     else if (type === "shield") this.shieldTimer = d;
     else if (type === "magnet") this.magnetTimer = d;
+    else if (type === "star") this.starTimer = d;
     return true;
   }
 
@@ -195,6 +202,7 @@ class Player {
     if (this.shieldTimer > 0) this.shieldTimer -= dt;
     if (this.magnetTimer > 0) this.magnetTimer -= dt;
     if (this.invulnTimer > 0) this.invulnTimer -= dt;
+    if (this.starTimer > 0) this.starTimer -= dt;
   }
 
   draw(ctx) {
@@ -208,6 +216,17 @@ class Player {
       ctx.fillStyle = "#9be7ff";
       ctx.beginPath();
       ctx.arc(cx, cy, this.whirlRadius * (1 - this.whirlTimer / this.whirlVisualTime + 0.3), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Stern-Aura (Unverwundbarkeit): goldener, pulsierender Schein
+    if (this.hasStar) {
+      ctx.save();
+      ctx.globalAlpha = 0.35 + 0.25 * Math.sin(performance.now() / 60);
+      ctx.fillStyle = "#ffd84d";
+      ctx.beginPath();
+      ctx.arc(cx, cy, this.width * 0.95, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }

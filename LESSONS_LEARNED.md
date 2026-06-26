@@ -399,6 +399,31 @@ sich bei jedem neuen Feature aus.
 
 ---
 
+### 2026-06-22 — Der Stern, der schon implementiert war
+
+**Situation:** Batch mit Unverwundbarkeits-Stern (Power-Up), Meilenstein-Bannern und
+einem Pausen-Menü mit Steuerungs-Referenz.
+
+**Problem / Fehler:** „Unverwundbarkeit" klingt nach neuer Logik in jeder Kollision —
+in Wahrheit gab es das Konzept schon: `player.invulnerable` (i-Frames) wird von
+`survivesFatalHit()` überall ausgewertet. Der Stern musste also nur **denselben
+Zustand** anschalten, nicht eine neue Mechanik einführen.
+
+**Lösung:** Ein `starTimer` im Player, und `get invulnerable()` berücksichtigt ihn:
+`return this.invulnTimer > 0 || this.starTimer > 0;`. Damit überlebt Kevin mit Stern
+automatisch Zwerge, Hindernisse, Boss und Projektile — alles läuft schon durch den
+Unverwundbarkeits-/Fatal-Hit-Funnel. Das neue Power-Up war zu 90 % „bestehenden
+Zustand wiederverwenden" plus etwas Optik (Stern-Aura, HUD-Eintrag). Banner und
+Pausen-Menü sind reine Ausgabe (ein Toast bei jeder 1000er-Schwelle; eine Tabelle im
+Renderer) — Logik blieb minimal.
+
+**Lektion:** Vor dem Bauen fragen: *Existiert der Zustand, den ich brauche, schon?*
+Unverwundbarkeit war da — der Stern ist nur ein neuer Auslöser dafür. Wer Konzepte
+(„unverwundbar", „tödlicher Treffer") einmal sauber als Zustand modelliert, bekommt
+neue Features als kleine Aufsätze statt als Parallel-Implementierungen.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.

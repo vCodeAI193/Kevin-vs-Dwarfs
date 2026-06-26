@@ -15,7 +15,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 - Wo sinnvoll, ist der Bezug zu bestehenden Mustern genannt (z. B. `DWARF_TYPES`,
   `CONFIG`, seedbarer `mulberry32`, Achievements-als-Daten).
 - **Bereits umgesetzt** (✅, siehe [FEATURES.md](./FEATURES.md)): FI-003, FI-005,
-  FI-030, FI-043, FI-058, FI-073, FI-074.
+  FI-024, FI-030, FI-043, FI-044, FI-058, FI-073, FI-074, FI-088.
 
 ---
 
@@ -56,7 +56,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 | FI-021 | **Zeitlupe** (Bullet-Time) kurzzeitig | M | — |
 | FI-022 | **Sprungfeder/Rakete** für extra Höhe | S | — |
 | FI-023 | **Münz-Verdoppler** (zeitlich begrenzt) | S | — |
-| FI-024 | **Unverwundbarkeits-Stern** | S | — |
+| FI-024 | ✅ **Unverwundbarkeits-Stern** | S | — |
 | FI-025 | **Sofort-Wirbelsturm-Aufladung** als Pickup | S | — |
 | FI-026 | **Enterhaken** zum Überbrücken von Lücken | L | — |
 | FI-027 | **Begleiter/Pet**, das Münzen einsammelt | M | — |
@@ -86,7 +86,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 | FI-041 | **Münz-Shop** für permanente Upgrades | M | — |
 | FI-042 | **Prestige / New Game+** nach Meilensteinen | M | — |
 | FI-043 | ✅ **Mehr Erfolge**, inkl. versteckter | S | — |
-| FI-044 | **Meilenstein-Banner** bei Distanz-Schwellen | S | — |
+| FI-044 | ✅ **Meilenstein-Banner** bei Distanz-Schwellen | S | — |
 | FI-045 | **Rekord-Splits** (beste Distanz je Biom) | S | — |
 | FI-046 | **Sammelkarten/Stickeralbum** aus Läufen | M | — |
 | FI-047 | **Statistik-Diagramme** (Verlauf über die Zeit) | M | — |
@@ -155,7 +155,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 | FI-085 | **Skalierbare UI / größere Schrift** | S | — |
 | FI-086 | **Einstellungsmenü** mit Lautstärke-Slidern | M | — |
 | FI-087 | **Tutorial-Overlay** beim ersten Start | M | — |
-| FI-088 | **Pausen-Menü** mit Steuerungs-Referenz | S | — |
+| FI-088 | ✅ **Pausen-Menü** mit Steuerungs-Referenz | S | — |
 | FI-089 | **Gamepad-Unterstützung** (Gamepad API) | M | — |
 
 ## 11 · Plattform, Technik & PWA

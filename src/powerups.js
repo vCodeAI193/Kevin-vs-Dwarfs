@@ -13,6 +13,7 @@ const CONFIG =
  * - doublejump: ein zweiter Sprung in der Luft
  * - shield:     schützt vor einem sonst tödlichen Treffer
  * - magnet:     zieht Münzen in der Nähe an
+ * - star:       kurze Unverwundbarkeit
  *
  * Sie spawnen selten und schweben auf Sprunghöhe.
  */
@@ -20,6 +21,7 @@ const POWERUP_TYPES = {
   doublejump: { color: "#7cf", symbol: "⇈" },
   shield: { color: "#4ad0ff", symbol: "⛨" },
   magnet: { color: "#ff6fae", symbol: "U" },
+  star: { color: "#ffd84d", symbol: "★" },
 };
 
 class PowerUp {

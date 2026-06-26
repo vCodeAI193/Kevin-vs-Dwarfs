@@ -105,6 +105,18 @@ test("activatePowerUp setzt die jeweiligen Flags und läuft ab", () => {
   assert.equal(p.hasMagnet, false);
 });
 
+test("Unverwundbarkeits-Stern macht Kevin invulnerable und läuft ab", () => {
+  const p = freshPlayer();
+  assert.equal(p.hasStar, false);
+  assert.equal(p.invulnerable, false);
+  assert.equal(p.activatePowerUp("star"), true);
+  assert.equal(p.hasStar, true);
+  assert.equal(p.invulnerable, true); // Stern zählt als unverwundbar
+  for (let i = 0; i < 60 * 12; i++) p.update(1 / 60);
+  assert.equal(p.hasStar, false);
+  assert.equal(p.invulnerable, false);
+});
+
 test("consumeShield verbraucht den Schild genau einmal", () => {
   const p = freshPlayer();
   assert.equal(p.consumeShield(), false); // kein Schild

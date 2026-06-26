@@ -23,6 +23,10 @@ test("unbekannter Typ fällt nicht auf undefined zurück", () => {
   assert.ok(p.symbol);
 });
 
+test("enthält den Unverwundbarkeits-Stern als Typ", () => {
+  assert.ok("star" in POWERUP_TYPES);
+});
+
 test("pickPowerUpType liefert immer einen gültigen Typ", () => {
   const keys = Object.keys(POWERUP_TYPES);
   assert.ok(keys.includes(pickPowerUpType(() => 0)));

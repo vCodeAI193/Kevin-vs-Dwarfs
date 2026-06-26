@@ -35,7 +35,8 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 - 🧝 **Zwerg-Typen:** normal, schnell und gepanzert (nur per Wirbelsturm besiegbar)
 - 🪨 **Hindernisse** (Felsen) zum Drüberspringen
 - 🪙 **Münzen** sammeln für Punkte und etwas Extra-Power
-- ⚡ **Power-Ups:** Doppelsprung, Schild (fängt einen tödlichen Treffer ab) und Magnet
+- ⚡ **Power-Ups:** Doppelsprung, Schild, Magnet und **Unverwundbarkeits-Stern** ★
+- 🏁 **Meilenstein-Banner** alle 1000 Distanz; **Pausen-Menü** mit Steuerungs-Referenz
 - 👹 **Mehrphasiger Bosskampf:** der Zwergenkönig wird mit sinkenden Lebenspunkten
   schneller und wirft ab Phase 2 Hämmer, über die Kevin springen muss; bringt Score-Bonus
 - 🔔 **Toast-Hinweise:** kurze Einblendungen für Boss-Phasen und frisch freigeschaltete Erfolge
@@ -148,7 +149,7 @@ Skin-Freischaltung, die Lifetime-Statistiken und die Erfolgs-Regeln, das Toast-S
 den deterministischen Tages-Seed (`src/daily.js`), das Partikelsystem, die
 Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung (`src/collision.js`).
 Ein Smoke-Test prüft zudem, dass `index.html` alle `src/`-Skripte korrekt einbindet.
-Aktuell **149 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
+Aktuell **151 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).

@@ -34,7 +34,7 @@ class Renderer {
     if (s.state === "ready") {
       this.drawReady(s);
     } else if (s.state === "paused") {
-      this.drawCenterText("Pause", "P oder Esc zum Weiterspielen");
+      this.drawPaused();
     } else if (s.state === "gameover") {
       this.drawGameOver(s);
     } else if (s.state === "achievements") {
@@ -127,6 +127,7 @@ class Renderer {
 
     // Aktive Power-Ups
     const active = [];
+    if (player.hasStar) active.push(["★ Unverwundbar", player.starTimer, "#ffd84d"]);
     if (player.hasDoubleJump) active.push(["Doppelsprung", player.doubleJumpTimer, "#7cf"]);
     if (player.hasShield) active.push(["Schild", player.shieldTimer, "#4ad0ff"]);
     if (player.hasMagnet) active.push(["Magnet", player.magnetTimer, "#ff6fae"]);
@@ -144,6 +145,45 @@ class Renderer {
       ctx.textAlign = "center";
       ctx.fillText("⚔️ Zwergenkönig!", W / 2, 28);
     }
+  }
+
+  drawPaused() {
+    const ctx = this.ctx, W = this.W, H = this.H;
+    this.dimOverlay();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 36px system-ui, sans-serif";
+    ctx.fillText("Pause", W / 2, 80);
+
+    ctx.font = "bold 16px system-ui, sans-serif";
+    ctx.fillStyle = "#ffd84d";
+    ctx.fillText("Steuerung", W / 2, 128);
+
+    const rows = [
+      ["Leertaste / ↑ / W / Klick", "Springen"],
+      ["Shift / F", "Wirbelsturm"],
+      ["P / Esc", "Pause / Weiter"],
+      ["M", "Ton an/aus"],
+      ["A", "Erfolge & Statistiken"],
+      ["T", "Tages-Challenge"],
+      ["Z", "Zen-Modus"],
+    ];
+    ctx.font = "15px system-ui, sans-serif";
+    let y = 158;
+    for (const [key, action] of rows) {
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#9be7ff";
+      ctx.fillText(key, W / 2 - 14, y);
+      ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.fillText(action, W / 2 + 14, y);
+      y += 24;
+    }
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "16px system-ui, sans-serif";
+    ctx.fillText("P oder Esc zum Weiterspielen", W / 2, H - 20);
   }
 
   drawCenterText(title, subtitle) {

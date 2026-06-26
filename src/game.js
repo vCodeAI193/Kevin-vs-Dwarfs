@@ -52,6 +52,7 @@
   let unlockedAchievements = loadUnlocked(storage);
   let runMaxCombo = 0; // höchste Combo im aktuellen Lauf
   let bossesThisRun = 0;
+  let lastMilestone = 0; // letzte erreichte Distanz-Schwelle (Banner)
   let lastRun = null; // Zusammenfassung des letzten Laufs (für Game-Over-Screen)
   let lastNewAchievements = []; // im letzten Lauf neu freigeschaltete Erfolge
 
@@ -233,6 +234,7 @@
     hitstop.reset();
     runMaxCombo = 0;
     bossesThisRun = 0;
+    lastMilestone = 0;
     lastBossPhase = 0;
     particles.reset();
     boss = null;
@@ -524,6 +526,14 @@
 
     bgOffset = (bgOffset + worldSpeed * 0.4) % W;
     distance += worldSpeed * dt * 10;
+
+    // Meilenstein-Banner alle 1000 Distanz
+    const MILESTONE = 1000;
+    const reached = Math.floor(distance / MILESTONE) * MILESTONE;
+    if (reached > lastMilestone) {
+      lastMilestone = reached;
+      toasts.add("🏁 " + reached + " m!", 1.6, "#9be7ff");
+    }
 
     // Boss-Phase starten, wenn die nächste Distanz-Schwelle erreicht ist
     if (!boss && distance >= nextBossDistance) spawnBoss();

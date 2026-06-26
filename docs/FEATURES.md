@@ -28,7 +28,7 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 | Feature | Status | Modul |
 |---------|:------:|-------|
 | Münzen sammeln (Punkte + Power) | ✅ | `collectibles.js` |
-| Power-Ups: Doppelsprung, Schild, Magnet | ✅ | `powerups.js`, `player.js` |
+| Power-Ups: Doppelsprung, Schild, Magnet, Unverwundbarkeits-Stern | ✅ | `powerups.js`, `player.js` |
 | Combo-System (Score-Multiplikator bis 8×) | ✅ | `combo.js` |
 | Biome + Parallax (Wiese → Höhle → Lava → Eis → Wüste) | ✅ | `biomes.js` |
 | Zen-Modus (Übung ohne Game Over) | ✅ | `game.js` |
@@ -51,6 +51,8 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 | Partikel-Effekte | ✅ | `particles.js` |
 | Screen-Shake bei Stomp/Boss/Wirbelsturm (Trauma-Modell) | ✅ | `screenshake.js` |
 | Hit-Stop (kurzes Einfrieren bei Stomp/Boss-Treffer) | ✅ | `hitstop.js` |
+| Meilenstein-Banner alle 1000 Distanz | ✅ | `game.js`, `toast.js` |
+| Pausen-Menü mit Steuerungs-Referenz | ✅ | `renderer.js` |
 | Biom „Wüste" (zusätzlich zu Wiese/Höhle/Lava/Eis) | ✅ | `biomes.js` |
 | Toast-Hinweise (Erfolge, Boss-Phasen) | ✅ | `toast.js` |
 | Pause (P/Esc) | ✅ | `game.js` |

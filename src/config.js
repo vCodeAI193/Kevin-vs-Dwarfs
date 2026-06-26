@@ -35,7 +35,7 @@ const CONFIG = {
   hitstop: { stomp: 0.04, boss: 0.07 },
 
   // Power-Up-Dauern (Sekunden) und Magnet-Reichweite
-  powerUp: { doublejump: 9, shield: 7, magnet: 8, magnetRadius: 220 },
+  powerUp: { doublejump: 9, shield: 7, magnet: 8, star: 6, magnetRadius: 220 },
 
   // Combo: Zeitfenster (Sekunden) und maximaler Multiplikator
   combo: { window: 2.5, maxMultiplier: 8 },
