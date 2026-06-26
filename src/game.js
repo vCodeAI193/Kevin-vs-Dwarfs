@@ -25,6 +25,7 @@
   const toasts = new ToastManager();
   const sound = new SoundFX();
   const shake = new ScreenShake();
+  const hitstop = new HitStop();
   const renderer = new Renderer(ctx, W, H, GROUND_Y);
   const storage = typeof localStorage !== "undefined" ? localStorage : null;
 
@@ -58,6 +59,9 @@
   let dailyMode = false;
   let dailyBest = 0;
 
+  // Zen-Modus (Übung ohne Game Over)
+  let zenMode = false;
+
   // Skin laden und auf Kevin anwenden
   let currentSkinId = loadSkinId(storage);
   player.setSkin(getSkinById(currentSkinId));
@@ -83,8 +87,13 @@
       toggleDaily();
       return;
     }
+    if (e.code === "KeyZ") {
+      toggleZen();
+      return;
+    }
     if (e.code === "KeyP" || e.code === "Escape") {
       if (state === "achievements") state = "ready";
+      else if (zenMode && state === "playing") state = "ready"; // Zen-Übung beenden
       else togglePause();
       return;
     }
@@ -128,6 +137,18 @@
     dailyMode = !dailyMode;
     const btn = document.getElementById("btn-daily");
     if (btn) btn.textContent = dailyMode ? "📅 Täglich: An" : "📅 Täglich";
+  }
+
+  // Zen-Modus an/aus (Übung ohne Game Over); im Lauf beendet Z die Übung
+  function toggleZen() {
+    if (state === "playing") {
+      if (zenMode) state = "ready"; // Übungslauf sauber beenden
+      return;
+    }
+    if (state === "paused") return;
+    zenMode = !zenMode;
+    const btn = document.getElementById("btn-zen");
+    if (btn) btn.textContent = zenMode ? "🧘 Zen: An" : "🧘 Zen";
   }
 
   // Erfolge-/Statistik-Übersicht öffnen/schließen
@@ -174,6 +195,7 @@
   bindButton("btn-sound", toggleSound);
   bindButton("btn-skin", cycleSkin);
   bindButton("btn-daily", toggleDaily);
+  bindButton("btn-zen", toggleZen);
   bindButton("btn-achievements", toggleAchievements);
   // Skin-Button-Label initialisieren
   {
@@ -208,6 +230,7 @@
     combo.reset();
     toasts.reset();
     shake.reset();
+    hitstop.reset();
     runMaxCombo = 0;
     bossesThisRun = 0;
     lastBossPhase = 0;
@@ -251,6 +274,11 @@
    */
   function survivesFatalHit() {
     if (player.invulnerable) return true;
+    // Zen-Modus: kein Game Over – kurze i-Frames, damit es nicht jeden Frame auslöst
+    if (zenMode) {
+      player.grantInvulnerability(0.6);
+      return true;
+    }
     if (player.consumeShield()) {
       player.grantInvulnerability(1.0);
       shake.add(0.45);
@@ -268,6 +296,7 @@
     kills++;
     player.addKillPower();
     shake.add(0.25);
+    hitstop.trigger(CONFIG.hitstop.stomp);
     registerComboKill(d.x + d.width / 2, d.y);
     particles.emit(d.x + d.width / 2, d.y + d.height / 2, 12, {
       color: "#d8a", speed: 200, life: 0.45, size: 4,
@@ -417,6 +446,7 @@
         player.addKillPower();
         registerComboKill(player.x + player.width / 2, player.y);
         shake.add(0.4);
+        hitstop.trigger(CONFIG.hitstop.boss);
         particles.emit(player.x + player.width / 2, player.y + player.height, 10, {
           color: "#d8a", speed: 180, life: 0.4, size: 4,
         });
@@ -482,6 +512,12 @@
       return;
     }
 
+    // Hit-Stop: Welt kurz einfrieren (Schläge bekommen mehr Wucht)
+    if (hitstop.active) {
+      hitstop.update(dt);
+      return;
+    }
+
     elapsed += dt;
     const difficulty = elapsed / 12; // wächst langsam an
     worldSpeed = 4 + difficulty * 1.4;
@@ -542,6 +578,7 @@
   }
 
   function checkLiveAchievements() {
+    if (zenMode) return; // Übungsmodus zählt nicht für Erfolge
     const fresh = newlyUnlocked(unlockedAchievements, liveStats());
     if (fresh.length === 0) return;
     for (const id of fresh) {
@@ -567,6 +604,7 @@
       kills,
       coinsCollected, // Anzahl eingesammelter Münzen (Zahl)
       dailyMode,
+      zenMode,
       dailyBest: dailyMode && state === "ready" ? loadDailyBest(storage, todaySeed()) : dailyBest,
       combo,
       player,

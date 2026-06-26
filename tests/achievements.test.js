@@ -49,6 +49,14 @@ test("newlyUnlocked liefert nur das, was noch nicht bekannt war", () => {
   assert.deepEqual(again, []);
 });
 
+test("neue Erfolge schalten an ihren Schwellen frei", () => {
+  assert.ok(evaluateAchievements({ ...emptyStats(), bestDistance: 10000 }).includes("globetrotter"));
+  assert.ok(evaluateAchievements({ ...emptyStats(), totalCoins: 2000 }).includes("coin_hoarder"));
+  assert.ok(evaluateAchievements({ ...emptyStats(), runs: 200 }).includes("dedicated"));
+  // knapp darunter: noch nicht
+  assert.ok(!evaluateAchievements({ ...emptyStats(), bestDistance: 9999 }).includes("globetrotter"));
+});
+
 test("getAchievement liefert Definition bzw. null", () => {
   assert.equal(getAchievement("first_blood").name, "Erster Zwerg");
   assert.equal(getAchievement("gibtsnicht"), null);

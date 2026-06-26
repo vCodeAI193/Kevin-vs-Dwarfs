@@ -10,6 +10,9 @@ const ACHIEVEMENTS = [
   { id: "marathon", name: "Marathon", desc: "Schaffe 5000 Distanz in einem Lauf", test: (s) => s.bestDistance >= 5000 },
   { id: "treasure", name: "Schatzjäger", desc: "Sammle 500 Münzen insgesamt", test: (s) => s.totalCoins >= 500 },
   { id: "veteran", name: "Veteran", desc: "Spiele 50 Läufe", test: (s) => s.runs >= 50 },
+  { id: "globetrotter", name: "Weltenbummler", desc: "Schaffe 10000 Distanz in einem Lauf", test: (s) => s.bestDistance >= 10000 },
+  { id: "coin_hoarder", name: "Münz-Hamster", desc: "Sammle 2000 Münzen insgesamt", test: (s) => s.totalCoins >= 2000 },
+  { id: "dedicated", name: "Unermüdlich", desc: "Spiele 200 Läufe", test: (s) => s.runs >= 200 },
 ];
 
 /** IDs aller Erfolge, deren Bedingung mit den Statistiken erfüllt ist. */

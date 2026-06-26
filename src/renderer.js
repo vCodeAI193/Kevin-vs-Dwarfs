@@ -94,6 +94,11 @@ class Renderer {
       ctx.fillText("📅 Tages-Challenge", 16, 102);
       ctx.fillStyle = "#1b1033";
     }
+    if (s.zenMode) {
+      ctx.fillStyle = "#7ad0a0";
+      ctx.fillText("🧘 Zen-Modus (kein Game Over) — Z/Esc beendet", 16, s.dailyMode ? 120 : 102);
+      ctx.fillStyle = "#1b1033";
+    }
 
     // Combo-Anzeige (nur ab 2x)
     if (s.combo.active) {
@@ -160,7 +165,9 @@ class Renderer {
 
   drawReady(s) {
     const ctx = this.ctx, W = this.W, H = this.H;
-    const subtitle = s.dailyMode
+    const subtitle = s.zenMode
+      ? "Zen-Modus · Leertaste / Klick zum Starten"
+      : s.dailyMode
       ? "Tages-Challenge · Leertaste / Klick zum Starten"
       : "Leertaste / Klick zum Starten";
     this.drawCenterText("Kevin gegen die Zwerge", subtitle);

@@ -15,7 +15,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 - Wo sinnvoll, ist der Bezug zu bestehenden Mustern genannt (z. B. `DWARF_TYPES`,
   `CONFIG`, seedbarer `mulberry32`, Achievements-als-Daten).
 - **Bereits umgesetzt** (✅, siehe [FEATURES.md](./FEATURES.md)): FI-003, FI-005,
-  FI-030, FI-073.
+  FI-030, FI-043, FI-058, FI-073, FI-074.
 
 ---
 
@@ -85,7 +85,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 | FI-040 | **XP- & Level-System** mit Freischaltungen | M | — |
 | FI-041 | **Münz-Shop** für permanente Upgrades | M | — |
 | FI-042 | **Prestige / New Game+** nach Meilensteinen | M | — |
-| FI-043 | **Mehr Erfolge**, inkl. versteckter | S | — |
+| FI-043 | ✅ **Mehr Erfolge**, inkl. versteckter | S | — |
 | FI-044 | **Meilenstein-Banner** bei Distanz-Schwellen | S | — |
 | FI-045 | **Rekord-Splits** (beste Distanz je Biom) | S | — |
 | FI-046 | **Sammelkarten/Stickeralbum** aus Läufen | M | — |
@@ -110,7 +110,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 |----|------|:------:|:------:|
 | FI-056 | **Time-Attack**: feste Strecke auf Zeit — nutzt `mulberry32` | M | — |
 | FI-057 | **Hardcore/Permadeath** (1 Leben, kein Schild) | S | — |
-| FI-058 | **Zen-Modus** ohne Game Over (üben) | S | — |
+| FI-058 | ✅ **Zen-Modus** ohne Game Over (üben) | S | — |
 | FI-059 | **Wöchentliche Challenge** mit fixem Seed | S | — |
 | FI-060 | **Mutatoren/Modifier** (z. B. doppeltes Tempo) | M | — |
 | FI-061 | **Boss-Trainingsmodus** (Boss auf Abruf) | M | — |
@@ -136,7 +136,7 @@ Sammlung von **100 Dingen, die man umsetzen könnte**.
 | ID | Idee | Aufwand | Leitplanke |
 |----|------|:------:|:------:|
 | FI-073 | ✅ **Screen-Shake** bei Stomp/Boss-Treffer | S | — |
-| FI-074 | **Hit-Stop** (kurzes Einfrieren bei Treffern) | S | — |
+| FI-074 | ✅ **Hit-Stop** (kurzes Einfrieren bei Treffern) | S | — |
 | FI-075 | **Dynamische Musik**, wächst mit Tempo/Combo | M | — |
 | FI-076 | **Mehr SFX-Variation** (synthetisch) — `audio.js` | S | — |
 | FI-077 | **Combo-Sound-Eskalation** (Tonleiter hoch) | S | — |

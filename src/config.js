@@ -31,6 +31,9 @@ const CONFIG = {
   // Screen-Shake: maximaler Versatz (px) und Abklingrate (Trauma/Sekunde)
   shake: { maxOffset: 12, decay: 1.8 },
 
+  // Hit-Stop: Einfrier-Dauer (Sekunden) je Trefferart
+  hitstop: { stomp: 0.04, boss: 0.07 },
+
   // Power-Up-Dauern (Sekunden) und Magnet-Reichweite
   powerUp: { doublejump: 9, shield: 7, magnet: 8, magnetRadius: 220 },
 

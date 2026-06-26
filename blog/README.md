@@ -42,3 +42,4 @@ scripts/setup-hooks.sh
 | 2026-06-18 | [Der grüne Test, der trotzdem log — kurzlebige Objekte richtig prüfen](./2026-06-18-kurzlebige-objekte-testen.md) |
 | 2026-06-19 | [Aufräumen ohne Angst: ein 800-Zeilen-God-File entflechten](./2026-06-19-god-file-entflechten.md) |
 | 2026-06-20 | [Spielgefühl ist testbare Logik — Coyote-Time, Sprung-Puffer & Screen-Shake](./2026-06-20-spielgefuehl-ist-testbare-logik.md) |
+| 2026-06-21 | [Eine Naht, zwei Features — Hit-Stop und Zen-Modus mit minimalem Eingriff](./2026-06-21-eine-naht-zwei-features.md) |

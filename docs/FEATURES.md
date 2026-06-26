@@ -30,7 +30,8 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 | Münzen sammeln (Punkte + Power) | ✅ | `collectibles.js` |
 | Power-Ups: Doppelsprung, Schild, Magnet | ✅ | `powerups.js`, `player.js` |
 | Combo-System (Score-Multiplikator bis 8×) | ✅ | `combo.js` |
-| Biome + Parallax (Wiese → Höhle → Lava → Eis) | ✅ | `biomes.js` |
+| Biome + Parallax (Wiese → Höhle → Lava → Eis → Wüste) | ✅ | `biomes.js` |
+| Zen-Modus (Übung ohne Game Over) | ✅ | `game.js` |
 
 ## Meta-Progression (dauerhaft)
 
@@ -38,7 +39,7 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 |---------|:------:|-------|
 | Highscore (localStorage) | ✅ | `storage.js` |
 | Lifetime-Statistiken | ✅ | `stats.js` |
-| Erfolge/Achievements (7 Stück) + Übersichts-Screen | ✅ | `achievements.js` |
+| Erfolge/Achievements (10 Stück) + Übersichts-Screen | ✅ | `achievements.js` |
 | Freischaltbare Skins (Klassisch, Frost, Magma, Gold, Schatten) | ✅ | `skins.js` |
 | Tägliche Challenge (fester Seed) + Tages-Bestmarke | ✅ | `daily.js` |
 
@@ -49,6 +50,7 @@ nur Highlights und verlinkt hierher. Status: ✅ umgesetzt, 🎯 geplant.
 | Synthetischer Sound (Web Audio, ohne Dateien), Ton an/aus | ✅ | `audio.js` |
 | Partikel-Effekte | ✅ | `particles.js` |
 | Screen-Shake bei Stomp/Boss/Wirbelsturm (Trauma-Modell) | ✅ | `screenshake.js` |
+| Hit-Stop (kurzes Einfrieren bei Stomp/Boss-Treffer) | ✅ | `hitstop.js` |
 | Biom „Wüste" (zusätzlich zu Wiese/Höhle/Lava/Eis) | ✅ | `biomes.js` |
 | Toast-Hinweise (Erfolge, Boss-Phasen) | ✅ | `toast.js` |
 | Pause (P/Esc) | ✅ | `game.js` |

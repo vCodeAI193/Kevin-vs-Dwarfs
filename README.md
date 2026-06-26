@@ -28,7 +28,8 @@ besiegt Zwerge per Sprung auf den Kopf und entfesselt bei voller Power-Leiste de
 
 - 🏃 Endlos-Lauf nach rechts mit Springen, ansteigender Schwierigkeit
 - 🦘 **Faires Springen:** Coyote-Time, Sprung-Puffer und variable Sprunghöhe
-- 💥 **Screen-Shake** bei Stomp, Boss-Treffer und Wirbelsturm (mehr „Wucht")
+- 💥 **Screen-Shake** & **Hit-Stop** bei Stomp/Boss/Wirbelsturm (mehr „Wucht")
+- 🧘 **Zen-Modus:** üben ohne Game Over (zählt nicht für Highscore/Erfolge)
 - 🦶 Zwerge per **Stomp** besiegen; seitlicher Kontakt = Game Over
 - 🌀 **Wirbelsturm** als Spezialangriff (Power-Leiste füllt sich pro Kill/Münze)
 - 🧝 **Zwerg-Typen:** normal, schnell und gepanzert (nur per Wirbelsturm besiegbar)
@@ -91,6 +92,7 @@ Kevin-vs-Dwarfs/
 │   ├── projectile.js   # Boss-Wurfgeschosse (Hämmer)
 │   ├── toast.js        # kurze Bildschirm-Hinweise (Toasts)
 │   ├── screenshake.js  # Screen-Shake (Trauma-Modell)
+│   ├── hitstop.js      # Hit-Stop (kurzes Einfrieren bei Treffern)
 │   ├── combo.js        # Combo-System (Score-Multiplikator)
 │   ├── biomes.js       # Biome & Hintergrundfarben nach Distanz
 │   ├── skins.js        # freischaltbare Kevin-Skins
@@ -146,7 +148,7 @@ Skin-Freischaltung, die Lifetime-Statistiken und die Erfolgs-Regeln, das Toast-S
 den deterministischen Tages-Seed (`src/daily.js`), das Partikelsystem, die
 Highscore-Persistenz sowie die Stomp- und Überlapp-Erkennung (`src/collision.js`).
 Ein Smoke-Test prüft zudem, dass `index.html` alle `src/`-Skripte korrekt einbindet.
-Aktuell **142 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
+Aktuell **149 Tests** (inkl. reiner Module wie `spawn-manager`, `config`, `score`).
 
 Bei jedem Push laufen die Tests automatisch über
 [GitHub Actions](./.github/workflows/tests.yml).

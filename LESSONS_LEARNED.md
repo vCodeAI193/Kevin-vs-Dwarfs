@@ -372,6 +372,33 @@ Pfad verletzen könnte (hier der „zweite Gratis-Sprung").
 
 ---
 
+### 2026-06-21 — Hit-Stop & Zen-Modus: eine Naht, zwei Features
+
+**Situation:** Nächster Ideen-Batch: Hit-Stop (kurzes Einfrieren bei Treffern),
+Zen-Übungsmodus (kein Game Over) und ein paar neue Erfolge.
+
+**Problem / Fehler:** Beide Gameplay-Features greifen tief in die `update`-Schleife
+ein. Naiv umgesetzt verstreut man „friere ein"- und „stirb nicht"-Sonderfälle quer
+durch Kollisionen und Loop — schwer zu überblicken und leicht widersprüchlich.
+
+**Lösung:** Beide an **genau einer Naht** angesetzt:
+- **Hit-Stop** ist ein winziger Timer (`hitstop.js`). In `update()` steht ganz oben
+  *eine* Bedingung: ist der Hit-Stop aktiv, Timer herunterzählen und Frame
+  überspringen. Die Welt friert ein, ohne dass irgendeine andere Stelle davon weiß.
+- **Zen** nutzt die bereits vorhandene *eine* Stelle, an der alle tödlichen Treffer
+  zusammenlaufen: `survivesFatalHit()`. Ein Satz dort (`if (zenMode) …`) macht Kevin
+  unsterblich – Hindernisse, Zwerge, Boss und Projektile sind automatisch abgedeckt,
+  weil sie alle durch diese Funktion gehen. Plus: Zen zählt nicht für
+  Erfolge/Highscore (Übung soll die Statistik nicht verfälschen).
+
+**Lektion:** Wenn alle Fälle einer Sache schon durch *einen* Funnel laufen
+(`survivesFatalHit`), kostet ein neues Verhalten (Unsterblichkeit) eine Zeile statt
+vieler. Und ein „die Zeit anhalten"-Effekt gehört an genau eine Stelle der
+Loop-Spitze, nicht in jede Kollision. Saubere Nähte aus früheren Schritten zahlen
+sich bei jedem neuen Feature aus.
+
+---
+
 ## Wiederkehrende Erkenntnisse (Kurzfassung für den Blog)
 
 - **Vision vor Code.** Erst benennen, dann bauen.
