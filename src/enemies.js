@@ -91,25 +91,135 @@ class Dwarf {
 }
 
 /**
+ * Werfer-Zwerg: Wirft Felsbrocken nach Kevin, um ihn zu treffen.
+ * Die Felsen fliegen in einer Parabel über das Spielfeld.
+ */
+class ThrowingDwarf extends Dwarf {
+  constructor(x, groundY) {
+    super(x, groundY, "normal");
+    this.type = "throwing";
+    this.color = "#7a3d2a"; // dunkelbraun
+    this.capColor = "#b53e1a"; // rostrot
+    this.throwTimer = 0;
+    this.nextThrow = CONFIG.throwingDwarf.throwInterval * (0.7 + Math.random() * 0.3); // variabel
+  }
+
+  update(dt, worldSpeed) {
+    super.update(dt, worldSpeed);
+    this.throwTimer += dt;
+  }
+
+  shouldThrow() {
+    const ready = this.throwTimer >= this.nextThrow;
+    if (ready) {
+      this.throwTimer = 0;
+      this.nextThrow = CONFIG.throwingDwarf.throwInterval * (0.7 + Math.random() * 0.3);
+    }
+    return ready && !this.stunned;
+  }
+
+  createProjectile(playerY) {
+    const startX = this.x + this.width / 2;
+    const startY = this.y;
+    const targetX = -200; // in den Westen (zu Kevin)
+    const gravity = 600; // px/s²
+    const arcHeight = CONFIG.throwingDwarf.throwArcHeight;
+
+    // Parabel-Berechnung: Zeit bis zum Ziel unter Berücksichtigung der Bogenhöhe
+    const horizontalDist = Math.abs(targetX - startX);
+    const flightTime = horizontalDist / Math.abs(CONFIG.throwingDwarf.projectileSpeed);
+    const vx = CONFIG.throwingDwarf.projectileSpeed;
+    const vy = -(2 * arcHeight / flightTime + gravity * flightTime / 2);
+
+    return new ThrowableRock(startX, startY, vx, vy);
+  }
+
+  draw(ctx) {
+    ctx.save();
+    const cx = this.x + this.width / 2;
+    const cy = this.y + this.height / 2;
+    ctx.translate(cx, cy);
+    if (this.stunned) ctx.rotate(Math.PI / 2);
+
+    // Körper
+    ctx.fillStyle = this.stunned ? "#9a6b4a" : this.color;
+    ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+    // Bart
+    ctx.fillStyle = "#e8e8e8";
+    ctx.fillRect(-this.width / 2 + 4, 0, this.width - 8, this.height / 2 - 2);
+
+    // Helm statt Mütze (unterscheidbar vom Normal-Zwerg)
+    ctx.fillStyle = this.capColor;
+    ctx.beginPath();
+    ctx.arc(0, -this.height / 2, this.width / 2, Math.PI, 0);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+/**
+ * Wurfgeschoss des Werfers (Felsbrocken) – fliegt in einer Parabel.
+ * Berührung ist tödlich (außer Schild/i-Frames).
+ */
+class ThrowableRock {
+  constructor(x, y, vx, vy) {
+    this.width = 18;
+    this.height = 18;
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+    this.alive = true;
+    this.gravity = 600; // px/s²
+  }
+
+  update(dt) {
+    this.x += this.vx * dt;
+    this.vy += this.gravity * dt;
+    this.y += this.vy * dt;
+    if (this.x + this.width < -40 || this.y > 400) this.alive = false;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+    ctx.fillStyle = "#8b4513";
+    ctx.beginPath();
+    ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/**
  * Wählt anhand der Schwierigkeit einen Zwerg-Typ. Je höher die Schwierigkeit, desto
- * eher tauchen schnelle und gepanzerte Zwerge auf. rng erlaubt deterministische Tests.
+ * eher tauchen schnelle, gepanzerte und werfende Zwerge auf. rng erlaubt deterministische Tests.
  */
 function pickDwarfType(difficulty, rng = Math.random) {
   const r = rng();
-  const fastChance = Math.min(0.35, 0.05 + difficulty * 0.04);
   const armoredChance = Math.min(0.25, difficulty * 0.03);
+  const throwingChance = Math.min(0.2, difficulty * 0.02); // bis 20% Werfer
+  const fastChance = Math.min(0.35, 0.05 + difficulty * 0.04);
   if (r < armoredChance) return "armored";
-  if (r < armoredChance + fastChance) return "fast";
+  if (r < armoredChance + throwingChance) return "throwing";
+  if (r < armoredChance + throwingChance + fastChance) return "fast";
   return "normal";
 }
 
 /**
  * Verwaltet das Spawnen und Aktualisieren aller Zwerge. Die Spawn-Rate steigt mit
- * der Zeit, damit es endlos schwerer wird.
+ * der Zeit, damit es endlos schwerer wird. Verwaltet auch Werfer-Projektile.
  */
 class EnemyManager extends SpawnManager {
+  constructor(canvasWidth, groundY, rng) {
+    super(canvasWidth, groundY, rng);
+    this.projectiles = [];
+  }
+
   reset() {
     super.reset();
+    this.projectiles = [];
     this.cooldown = CONFIG.spawn.enemyCooldown; // Sekunden bis zum nächsten Spawn
   }
 
@@ -128,20 +238,36 @@ class EnemyManager extends SpawnManager {
 
   spawn(difficulty) {
     const type = pickDwarfType(difficulty, this.rng);
-    this.items.push(new Dwarf(this.canvasWidth + 20, this.groundY, type));
+    const dwarf = type === "throwing"
+      ? new ThrowingDwarf(this.canvasWidth + 20, this.groundY)
+      : new Dwarf(this.canvasWidth + 20, this.groundY, type);
+    this.items.push(dwarf);
   }
 
   keep(d) {
     return d.alive && d.x + d.width > -10;
   }
+
+  // Aktualisiert Werfer und ihre Projektile
+  updateThrowingDwarves(playerY) {
+    for (const d of this.dwarves) {
+      if (d.type === "throwing" && d.shouldThrow()) {
+        this.projectiles.push(d.createProjectile(playerY));
+      }
+    }
+    // Projektile aufräumen
+    this.projectiles = this.projectiles.filter(p => p.alive);
+  }
 }
 
 if (typeof window !== "undefined") {
   window.Dwarf = Dwarf;
+  window.ThrowingDwarf = ThrowingDwarf;
+  window.ThrowableRock = ThrowableRock;
   window.EnemyManager = EnemyManager;
   window.pickDwarfType = pickDwarfType;
   window.DWARF_TYPES = DWARF_TYPES;
 }
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { Dwarf, EnemyManager, pickDwarfType, DWARF_TYPES };
+  module.exports = { Dwarf, ThrowingDwarf, ThrowableRock, EnemyManager, pickDwarfType, DWARF_TYPES };
 }

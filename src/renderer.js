@@ -23,6 +23,12 @@ class Renderer {
     s.coins.draw(this.ctx);
     s.powerups.draw(this.ctx);
     s.enemies.draw(this.ctx);
+    // Werfer-Zwerg-Projektile zeichnen
+    if (s.enemies.projectiles) {
+      for (const p of s.enemies.projectiles) {
+        p.draw(this.ctx);
+      }
+    }
     if (s.boss) s.boss.draw(this.ctx);
     s.player.draw(this.ctx);
     s.particles.draw(this.ctx);
@@ -97,6 +103,16 @@ class Renderer {
     if (s.zenMode) {
       ctx.fillStyle = "#7ad0a0";
       ctx.fillText("🧘 Zen-Modus (kein Game Over) — Z/Esc beendet", 16, s.dailyMode ? 120 : 102);
+      ctx.fillStyle = "#1b1033";
+    }
+    if (s.hardcoreMode) {
+      ctx.fillStyle = "#ff6b6b";
+      ctx.fillText("💀 Hardcore: Zwerge brauchen mehr Hits, keine Power-Ups!", 16, s.dailyMode || s.zenMode ? 120 : 102);
+      ctx.fillStyle = "#1b1033";
+    }
+    if (s.tutorialMode) {
+      ctx.fillStyle = "#7cf";
+      ctx.fillText("🎓 Tutorial aktiv", 16, s.dailyMode || s.zenMode || s.hardcoreMode ? 138 : 102);
       ctx.fillStyle = "#1b1033";
     }
 

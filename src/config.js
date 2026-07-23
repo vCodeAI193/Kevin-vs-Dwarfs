@@ -45,6 +45,29 @@ const CONFIG = {
 
   // Distanz pro Biom (danach Schleife)
   biomeLength: 2000,
+
+  // Hardcore-Modus: schwieriger, keine Power-Ups, höhere Kills nötig
+  hardcore: {
+    dwarfHits: 5, // Zwerge brauchen 5 Stomps statt 1
+    spawnMultiplier: 1.3, // 30% denser enemies
+  },
+
+  // Werfer-Zwerg: Projektil-Verhalten
+  throwingDwarf: {
+    throwInterval: 2.2, // Sekunden zwischen Würfen
+    projectileSpeed: -200, // px/s, negativ = nach links
+    throwArcHeight: 60, // maximale Bogenhöhe
+  },
+
+  // Tutorial: Checkpoints und Ziele
+  tutorial: {
+    checkpoints: [
+      { id: "jump", desc: "Drücke Leertaste zum Springen!", icon: "🦘" },
+      { id: "coyote", desc: "Du kannst noch kurz nach der Kante springen!", icon: "⏱" },
+      { id: "doublejump", desc: "Power-Up genommen: Doppelsprung möglich!", icon: "⬆️⬆️" },
+      { id: "whirlwind", desc: "Leiste voll! Shift für Wirbelsturm!", icon: "🌪️" },
+    ],
+  },
 };
 
 if (typeof window !== "undefined") window.CONFIG = CONFIG;

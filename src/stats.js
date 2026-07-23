@@ -1,8 +1,10 @@
 /**
  * Dauerhafte Spielstatistiken über alle Läufe hinweg (in localStorage gespeichert).
  * Reine Funktionen + ein injizierbares Storage-Objekt machen alles testbar.
+ * Unterstützt Mode-Separation: casual (normal) vs hardcore (schwer, keine Power-Ups).
  */
 const STATS_KEY = "kvd_stats";
+const STATS_HARDCORE_KEY = "kvd_stats_hardcore";
 
 function emptyStats() {
   return {
@@ -16,21 +18,37 @@ function emptyStats() {
   };
 }
 
-function loadStats(storage) {
+function validateStats(data) {
+  if (!data || typeof data !== "object") return emptyStats();
+  const valid = { ...emptyStats() };
+  for (const key of Object.keys(valid)) {
+    const val = data[key];
+    if (typeof val === "number" && Number.isFinite(val) && val >= 0) {
+      valid[key] = val;
+    }
+  }
+  return valid;
+}
+
+function loadStats(storage, hardcore = false) {
   try {
     if (!storage) return emptyStats();
-    const raw = storage.getItem(STATS_KEY);
+    const key = hardcore ? STATS_HARDCORE_KEY : STATS_KEY;
+    const raw = storage.getItem(key);
     if (!raw) return emptyStats();
     const parsed = JSON.parse(raw);
-    return { ...emptyStats(), ...parsed }; // fehlende Felder ergänzen
+    return validateStats(parsed); // validieren vor Rückgabe
   } catch (e) {
     return emptyStats();
   }
 }
 
-function saveStats(storage, stats) {
+function saveStats(storage, stats, hardcore = false) {
   try {
-    if (storage) storage.setItem(STATS_KEY, JSON.stringify(stats));
+    if (storage) {
+      const key = hardcore ? STATS_HARDCORE_KEY : STATS_KEY;
+      storage.setItem(key, JSON.stringify(stats));
+    }
   } catch (e) {
     /* nicht spielkritisch */
   }
@@ -56,11 +74,13 @@ function mergeRun(stats, run) {
 
 if (typeof window !== "undefined") {
   window.STATS_KEY = STATS_KEY;
+  window.STATS_HARDCORE_KEY = STATS_HARDCORE_KEY;
   window.emptyStats = emptyStats;
+  window.validateStats = validateStats;
   window.loadStats = loadStats;
   window.saveStats = saveStats;
   window.mergeRun = mergeRun;
 }
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { STATS_KEY, emptyStats, loadStats, saveStats, mergeRun };
+  module.exports = { STATS_KEY, STATS_HARDCORE_KEY, emptyStats, validateStats, loadStats, saveStats, mergeRun };
 }

@@ -47,8 +47,8 @@
   let bgOffset = 0;
   let highscore = loadHighscore(storage);
 
-  // Dauerhafte Statistiken & Erfolge
-  let stats = loadStats(storage);
+  // Dauerhafte Statistiken & Erfolge (casual mode by default)
+  let stats = loadStats(storage, false);
   let unlockedAchievements = loadUnlocked(storage);
   let runMaxCombo = 0; // höchste Combo im aktuellen Lauf
   let bossesThisRun = 0;
@@ -62,6 +62,13 @@
 
   // Zen-Modus (Übung ohne Game Over)
   let zenMode = false;
+
+  // Hardcore-Modus (schwierig, keine Power-Ups, separate Stats)
+  let hardcoreMode = false;
+
+  // Tutorial-Modus (geführte Praktikums-Sequenz)
+  const tutorial = new Tutorial();
+  let tutorialMode = false;
 
   // Skin laden und auf Kevin anwenden
   let currentSkinId = loadSkinId(storage);
@@ -90,6 +97,14 @@
     }
     if (e.code === "KeyZ") {
       toggleZen();
+      return;
+    }
+    if (e.code === "KeyH") {
+      toggleHardcore();
+      return;
+    }
+    if (e.code === "KeyU") {
+      toggleTutorial();
       return;
     }
     if (e.code === "KeyP" || e.code === "Escape") {
@@ -152,6 +167,22 @@
     if (btn) btn.textContent = zenMode ? "🧘 Zen: An" : "🧘 Zen";
   }
 
+  // Hardcore-Modus an/aus (schwierig, keine Power-Ups, separate Stats)
+  function toggleHardcore() {
+    if (state === "playing" || state === "paused") return;
+    hardcoreMode = !hardcoreMode;
+    const btn = document.getElementById("btn-hardcore");
+    if (btn) btn.textContent = hardcoreMode ? "💀 Hardcore: An" : "💀 Hardcore";
+  }
+
+  // Tutorial-Modus an/aus (geführte Praktikums-Sequenz)
+  function toggleTutorial() {
+    if (state === "playing" || state === "paused") return;
+    tutorialMode = !tutorialMode;
+    const btn = document.getElementById("btn-tutorial");
+    if (btn) btn.textContent = tutorialMode ? "🎓 Tutorial: An" : "🎓 Tutorial";
+  }
+
   // Erfolge-/Statistik-Übersicht öffnen/schließen
   function toggleAchievements() {
     if (state === "playing" || state === "paused") return;
@@ -197,6 +228,8 @@
   bindButton("btn-skin", cycleSkin);
   bindButton("btn-daily", toggleDaily);
   bindButton("btn-zen", toggleZen);
+  bindButton("btn-hardcore", toggleHardcore);
+  bindButton("btn-tutorial", toggleTutorial);
   bindButton("btn-achievements", toggleAchievements);
   // Skin-Button-Label initialisieren
   {
@@ -212,6 +245,14 @@
       dailyBest = loadDailyBest(storage, seed);
     } else {
       activeRng = Math.random;
+    }
+
+    // Statistiken für den gewählten Modus laden
+    stats = loadStats(storage, hardcoreMode);
+
+    // Tutorial-Modus startet Tutorial-Sequenz statt normales Spiel
+    if (tutorialMode) {
+      tutorial.start();
     }
 
     state = "playing";
@@ -366,6 +407,18 @@
     }
   }
 
+  function handleThrowableCollisions() {
+    for (const p of enemies.projectiles) {
+      if (!p.alive) continue;
+      if (rectsOverlap(player, p)) {
+        p.alive = false;
+        if (survivesFatalHit()) continue;
+        gameOver();
+        return;
+      }
+    }
+  }
+
   function handlePowerUpCollisions() {
     for (const p of powerups.items) {
       if (!p.collected && rectsOverlap(player, p)) {
@@ -484,26 +537,42 @@
     shake.add(0.7);
     highscore = saveHighscore(storage, score);
 
-    // Lauf zusammenfassen, Statistiken & Erfolge aktualisieren
-    lastRun = {
-      distance: Math.floor(distance),
-      kills,
-      coins: coinsCollected,
-      bosses: bossesThisRun,
-      maxCombo: runMaxCombo,
-      score,
-    };
-    stats = mergeRun(stats, lastRun);
-    saveStats(storage, stats);
+    // Nur normale Läufe zählen (nicht Zen, Hardcore oder Tutorial)
+    if (!zenMode && !tutorialMode) {
+      // Lauf zusammenfassen und speichern
+      lastRun = {
+        distance: Math.floor(distance),
+        kills,
+        coins: coinsCollected,
+        bosses: bossesThisRun,
+        maxCombo: runMaxCombo,
+        score,
+      };
+      stats = mergeRun(stats, lastRun);
+      saveStats(storage, stats, hardcoreMode);
 
-    lastNewAchievements = newlyUnlocked(unlockedAchievements, stats);
-    if (lastNewAchievements.length > 0) {
-      unlockedAchievements = unlockedAchievements.concat(lastNewAchievements);
-      saveUnlocked(storage, unlockedAchievements);
+      // Erfolge nur im Normal-Modus freischalten
+      if (!hardcoreMode) {
+        lastNewAchievements = newlyUnlocked(unlockedAchievements, stats);
+        if (lastNewAchievements.length > 0) {
+          unlockedAchievements = unlockedAchievements.concat(lastNewAchievements);
+          saveUnlocked(storage, unlockedAchievements);
+        }
+      }
+
+      // Tages-Bestmarke aktualisieren
+      if (dailyMode) dailyBest = saveDailyBest(storage, todaySeed(), score);
+    } else {
+      // Im Tutorial/Zen: nur lastRun setzen für die Anzeige
+      lastRun = {
+        distance: Math.floor(distance),
+        kills,
+        coins: coinsCollected,
+        bosses: bossesThisRun,
+        maxCombo: runMaxCombo,
+        score,
+      };
     }
-
-    // Tages-Bestmarke aktualisieren
-    if (dailyMode) dailyBest = saveDailyBest(storage, todaySeed(), score);
   }
 
   // ---- Update ----
@@ -554,14 +623,29 @@
       if (state === "playing") handleBossProjectiles();
     } else {
       // Normale Gegner & Hindernisse nur außerhalb der Boss-Phase
-      enemies.update(dt, worldSpeed, difficulty);
+      // Hardcore-Modus: dichtere Feinde, höhere Schwierigkeit
+      const scaledDifficulty = hardcoreMode ? difficulty * CONFIG.hardcore.spawnMultiplier : difficulty;
+      enemies.update(dt, worldSpeed, scaledDifficulty);
       obstacles.update(dt, worldSpeed, difficulty);
+
+      // Werfer-Zwerge aktualisieren und ihre Projektile erzeugen
+      enemies.updateThrowingDwarves(player.y);
+
+      // Werfer-Projektile aktualisieren
+      for (const p of enemies.projectiles) {
+        p.update(dt);
+      }
+
       handleDwarfCollisions();
-      if (state === "playing") handleObstacleCollisions();
+      if (state === "playing") {
+        handleObstacleCollisions();
+        handleThrowableCollisions();
+      }
     }
 
     handleCoinCollisions();
-    handlePowerUpCollisions();
+    // Hardcore-Modus: keine Power-Ups
+    if (!hardcoreMode) handlePowerUpCollisions();
     checkLiveAchievements();
 
     score = computeScore({
@@ -588,7 +672,7 @@
   }
 
   function checkLiveAchievements() {
-    if (zenMode) return; // Übungsmodus zählt nicht für Erfolge
+    if (zenMode || hardcoreMode || tutorialMode) return; // keine Erfolge in Üb/Hardcore/Tutorial-Modi
     const fresh = newlyUnlocked(unlockedAchievements, liveStats());
     if (fresh.length === 0) return;
     for (const id of fresh) {
@@ -615,6 +699,8 @@
       coinsCollected, // Anzahl eingesammelter Münzen (Zahl)
       dailyMode,
       zenMode,
+      hardcoreMode,
+      tutorialMode,
       dailyBest: dailyMode && state === "ready" ? loadDailyBest(storage, todaySeed()) : dailyBest,
       combo,
       player,
@@ -629,6 +715,7 @@
       enemies,
       particles,
       toasts,
+      tutorial,
     });
   }
 
