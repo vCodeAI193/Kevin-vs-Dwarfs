@@ -1,0 +1,46 @@
+# Blog — Entwicklertagebuch zu „Kevin gegen die Zwerge"
+
+Hier entstehen **vollständige, veröffentlichungsreife Artikel** rund um die
+Entwicklung des Spiels. Während [`LESSONS_LEARNED.md`](../LESSONS_LEARNED.md) das
+knappe Logbuch ist, sind das hier ausformulierte Beiträge — direkt als Blogpost
+verwendbar.
+
+## Konvention
+
+- Nach jedem größeren Entwicklungs- oder Lern-Schritt entsteht **ein neuer Artikel**.
+- Dateiname: `YYYY-MM-DD-kurzer-slug.md`
+- Jeder Artikel ist eigenständig lesbar (Einleitung, Problem, Lösung, Fazit) und
+  hat einen kurzen Front-Matter-Block mit Titel, Datum und Tags.
+
+## Schnellstart (Automatik)
+
+Neues Artikel-Gerüst aus der Vorlage [`_TEMPLATE.md`](./_TEMPLATE.md) anlegen — das
+Skript füllt Datum/Titel und trägt den Artikel automatisch in die Tabelle unten ein:
+
+```bash
+scripts/new-article.sh "mein-slug" "Mein Titel"
+```
+
+Optionaler Git-Hook, der nach Commits an `src/` ans Artikelschreiben erinnert
+(einmalig pro Klon aktivieren):
+
+```bash
+scripts/setup-hooks.sh
+```
+
+## Artikel
+
+| Datum | Titel |
+|-------|-------|
+| 2026-06-15 | [Ein Canvas-Spiel ohne Abhängigkeiten testbar machen](./2026-06-15-canvas-spiel-testbar-machen.md) |
+| 2026-06-15 | [Zufall, Sound und localStorage testbar machen — ohne Browser](./2026-06-15-zufall-und-browser-apis-testbar.md) |
+| 2026-06-16 | [Der Boss, der den Helden nie traf — ein Koordinaten-Denkfehler](./2026-06-16-der-boss-der-den-helden-nie-traf.md) |
+| 2026-06-16 | [Eine Aktion, viele Auslöser — ein Spiel touch-tauglich machen](./2026-06-16-eine-aktion-viele-ausloeser.md) |
+| 2026-06-17 | [Auch Content hat Regeln — Combos, Biome und Skins testbar bauen](./2026-06-17-content-features-haben-regeln.md) |
+| 2026-06-17 | [Erfolge sind Daten, kein Code — Achievements sauber modellieren](./2026-06-17-erfolge-sind-daten-keine-checks.md) |
+| 2026-06-18 | [Eine tägliche Challenge fast geschenkt — dank injiziertem Zufall](./2026-06-18-tages-challenge-fast-gratis.md) |
+| 2026-06-18 | [Der grüne Test, der trotzdem log — kurzlebige Objekte richtig prüfen](./2026-06-18-kurzlebige-objekte-testen.md) |
+| 2026-06-19 | [Aufräumen ohne Angst: ein 800-Zeilen-God-File entflechten](./2026-06-19-god-file-entflechten.md) |
+| 2026-06-20 | [Spielgefühl ist testbare Logik — Coyote-Time, Sprung-Puffer & Screen-Shake](./2026-06-20-spielgefuehl-ist-testbare-logik.md) |
+| 2026-06-21 | [Eine Naht, zwei Features — Hit-Stop und Zen-Modus mit minimalem Eingriff](./2026-06-21-eine-naht-zwei-features.md) |
+| 2026-06-22 | [Der Stern, der schon da war — Features als Aufsatz auf bestehenden Zustand](./2026-06-22-stern-bestehenden-zustand-wiederverwenden.md) |
